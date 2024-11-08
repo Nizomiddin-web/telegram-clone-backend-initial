@@ -334,5 +334,7 @@ core/media/
 .envs/*
 !.envs/.local/
 .idea/
+.idea
+*.pyc
 *.pytest_cache/
 *.ipynb_checkpoints/
