@@ -338,3 +338,16 @@ core/media/
 *.pyc
 *.pytest_cache/
 *.ipynb_checkpoints/
+*.sqlite3
+static
+staticfiles
+.ruff_cache
+
+rollout.sh
+environment.json
+collection.json
+reports
+tests/.pytest_cache
+.pytest_cache
+celerybeat-schedule.db
+*.db
