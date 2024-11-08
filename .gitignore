@@ -333,3 +333,6 @@ core/media/
 .env
 .envs/*
 !.envs/.local/
+.idea/
+*.pytest_cache/
+*.ipynb_checkpoints/
