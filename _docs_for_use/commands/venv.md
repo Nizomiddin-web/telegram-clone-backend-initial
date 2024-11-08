@@ -9,7 +9,7 @@
     ```
     myvenv\Scripts\activate.bat
     ```
-  
+
 - **Unix-ga o'xshash (MacOS)da "myvenv" nomli virtual muhit yaratish:**
     ```
     python3 -m venv myvenv
