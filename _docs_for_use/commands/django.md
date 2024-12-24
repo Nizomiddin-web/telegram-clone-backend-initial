@@ -1,4 +1,4 @@
-# Django Buyruqlari
+d# Django Buyruqlari
 
 Ushbu qo'llanmada Django yordamida testlarni o'tkazish uchun turli buyruqlar keltirilgan.
 
