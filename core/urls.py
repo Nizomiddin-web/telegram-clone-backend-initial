@@ -4,25 +4,32 @@ from django.http import JsonResponse
 from django.urls import path, include
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
+
+from user.views import SignUpView
 
 
 def trigger_error(request):
     division_by_zero = 1 / 0
 
 urlpatterns = [
-    # path("sentry-debug/", trigger_error),
+    path("sentry-debug/", trigger_error),
     path("admin/", admin.site.urls),
     path("health/", lambda _:JsonResponse({"detail":"Healthy"}),name="health"),
     path("api/",include(
         [
             #Token Generate
+            #---------------------------------------------------------------------
             path('token/access/',TokenObtainPairView.as_view(),name='access-token'),
             path('token/refresh/',TokenRefreshView.as_view(),name='refresh-token'),
-            path('token/verify/',TokenObtainPairView.as_view(),name='verify-token'),
+            path('token/verify/',TokenVerifyView.as_view(),name='verify-token'),
 
+            #Project apps urls
+            #---------------------------------------------------------------------
+            path('users/register/',SignUpView.as_view(),name='user-register'),
 
             #Swagger path
+            #---------------------------------------------------------------------
             path('schema/', SpectacularAPIView.as_view(), name='schema'),
             path('swagger/', SpectacularSwaggerView.as_view(), name='swagger'),
             path('redoc/', SpectacularRedocView.as_view(), name='redoc'),

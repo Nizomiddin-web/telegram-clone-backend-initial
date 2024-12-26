@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -6,7 +8,8 @@ from apps.user.manager import UserManager
 
 # Create your models here.
 class User(AbstractUser):
-    phone_number = models.CharField(max_length=16,unique=True)
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
+    phone_number = models.CharField(max_length=18,unique=True)
     bio = models.CharField(max_length=200,null=True,blank=True)
     user_name =  models.CharField(max_length=200,null=True,blank=True)
     birth_date = models.DateField(null=True,blank=True)
@@ -14,7 +17,7 @@ class User(AbstractUser):
     is_online = models.BooleanField(default=False)
     last_seen = models.DateTimeField(null=True,blank=True)
     is_2fa_enabled = models.BooleanField(default=False)
-    otp_secret = models.CharField(max_length=16,null=True,blank=True)
+    otp_secret = models.CharField(max_length=200,null=True,blank=True)
     email = models.EmailField(null=True,blank=True)
     USERNAME_FIELD = "phone_number"
     objects = UserManager()
