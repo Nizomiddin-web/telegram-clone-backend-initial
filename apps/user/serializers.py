@@ -5,6 +5,7 @@ from django.contrib.auth.hashers import check_password
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from rest_framework.generics import get_object_or_404
 
 from share.tasks import send_email_task, send_sms_task
 from share.utils import generate_otp, check_otp
@@ -41,8 +42,6 @@ class VerifyOTPSerializer(serializers.Serializer):
     def validate_phone_number(self,phone_number):
         pattern = r"^\+?[1-9]\d{1,16}$"
         if re.match(pattern,phone_number):
-            if User.objects.filter(phone_number=phone_number,is_verified=True).exists():
-                raise ValidationError(_("User with this phone number already exists"))
             return phone_number
         raise ValidationError(_("Phone number not is valid"))
 
@@ -51,7 +50,24 @@ class VerifyOTPSerializer(serializers.Serializer):
         otp_code = validated_data.get('otp_code')
         otp_secret = self.context.get('otp_secret')
         check_otp(phone_number, otp_code, otp_secret)
-        user = User.objects.get(phone_number=phone_number, is_verified=False)
+        user = get_object_or_404(User, phone_number=phone_number)
         user.is_verified = True
         user.save()
+        return user
+
+class LoginSerializer(serializers.Serializer):
+    phone_number = serializers.CharField(min_length=9, max_length=18)
+
+    def validate_phone_number(self, phone_number):
+        pattern = r"^\+?[1-9]\d{1,16}$"
+        if re.match(pattern, phone_number):
+            return phone_number
+        raise ValidationError(_("Phone number not is valid"))
+
+    def create(self, validated_data):
+        phone_number = validated_data.get('phone_number')
+        user = get_object_or_404(User, phone_number=phone_number)
+        otp_code,otp_secret = generate_otp(phone_number,expire_in=5*60)
+        send_email_task.delay(email="nizomiddinmaniyev99@gmail.com",otp_code=otp_code)
+        # send_sms_task.delay(phone_number,otp_code)
         return user

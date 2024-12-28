@@ -3,11 +3,13 @@ from django.shortcuts import render
 from django_redis import get_redis_connection
 from drf_spectacular.utils import extend_schema_view
 from rest_framework import status
-from rest_framework.generics import CreateAPIView, UpdateAPIView
+from rest_framework.generics import CreateAPIView, UpdateAPIView, get_object_or_404
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from sentry_sdk.integrations.beam import raise_exception
 
 from share.utils import check_otp
-from user.serializers import SignUpSerializer, SignUpResponseSerializer, VerifyOTPSerializer
+from user.serializers import SignUpSerializer, SignUpResponseSerializer, VerifyOTPSerializer, LoginSerializer
 from user.services import UserService
 
 User = get_user_model()
@@ -45,3 +47,19 @@ class VerifyView(UpdateAPIView):
         user = serializer.save()
         tokens = UserService.create_tokens(user)
         return Response(data=tokens)
+
+class LoginView(CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = LoginSerializer
+    permission_classes = [AllowAny,]
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        phone_number = serializer.validated_data.get('phone_number')
+        user = serializer.save()
+        otp_secret = redis_conn.get(f"{user.phone_number}:otp_secret").decode()
+        data = {
+            "phone_number":phone_number,
+            "otp_secret":otp_secret
+        }
+        return Response(data=data)
