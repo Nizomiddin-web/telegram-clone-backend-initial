@@ -26,7 +26,7 @@ urlpatterns = [
 
             #Project apps urls
             #---------------------------------------------------------------------
-            path('users/register/',SignUpView.as_view(),name='user-register'),
+            path('users/',include('user.urls')),
 
             #Swagger path
             #---------------------------------------------------------------------

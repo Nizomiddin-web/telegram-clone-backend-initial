@@ -1,7 +1,7 @@
 import datetime
 import uuid
 from redis import Redis
-from enums import TokenType
+from .enums import TokenType
 from django_redis import get_redis_connection
 
 class TokenService:

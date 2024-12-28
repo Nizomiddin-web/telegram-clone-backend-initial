@@ -2,17 +2,14 @@ import random
 import string
 from secrets import token_urlsafe
 from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import make_password, check_password
 from django_redis import get_redis_connection
 from rest_framework.exceptions import ValidationError
 
-def redis_conn():
-    return get_redis_connection("default")
-
+redis_conn = get_redis_connection("default")
 def generate_otp(phone_number:str,expire_in:int=120,check_if_exists:bool=True):
     otp_code = "".join(random.choices(string.digits,k=6))
     secret_token = token_urlsafe()
-    redis_conn = get_redis_connection("default")
     redis_conn.set(f"{phone_number}:otp_secret",secret_token,ex=expire_in)
     otp_hash = make_password(f"{secret_token}:{otp_code}")
     key = f"{phone_number}:otp"
@@ -27,3 +24,9 @@ def generate_otp(phone_number:str,expire_in:int=120,check_if_exists:bool=True):
 
     redis_conn.set(key,otp_hash,ex=expire_in)
     return otp_code,secret_token
+
+def check_otp(phone_number:str,otp_code:str,otp_secret:str):
+    stored_hash:bytes = redis_conn.get(f"{phone_number}:otp")
+    if not stored_hash or not check_password(f"{otp_secret}:{otp_code}",stored_hash.decode()):
+        raise ValidationError(_("Invalid OTP code."),400)
+

@@ -3,10 +3,12 @@ from django.shortcuts import render
 from django_redis import get_redis_connection
 from drf_spectacular.utils import extend_schema_view
 from rest_framework import status
-from rest_framework.generics import CreateAPIView
+from rest_framework.generics import CreateAPIView, UpdateAPIView
 from rest_framework.response import Response
 
-from user.serializers import SignUpSerializer, SignUpResponseSerializer
+from share.utils import check_otp
+from user.serializers import SignUpSerializer, SignUpResponseSerializer, VerifyOTPSerializer
+from user.services import UserService
 
 User = get_user_model()
 
@@ -31,3 +33,21 @@ class SignUpView(CreateAPIView):
         }
         serializer = SignUpResponseSerializer(instance=data)
         return Response(data=serializer.data,status=status.HTTP_201_CREATED)
+
+class VerifyView(UpdateAPIView):
+    queryset = User.objects.all()
+    serializer_class = VerifyOTPSerializer
+    http_method_names = ['patch']
+
+    def patch(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        phone_number = serializer.validated_data.get('phone_number')
+        otp_code = serializer.validated_data.get('otp_code')
+        otp_secret = kwargs.get('otp_secret')
+        check_otp(phone_number,otp_code,otp_secret)
+        user = User.objects.get(phone_number=phone_number,is_verified=False)
+        user.is_verified=True
+        user.save()
+        tokens = UserService.create_tokens(user)
+        return Response(data=tokens)
