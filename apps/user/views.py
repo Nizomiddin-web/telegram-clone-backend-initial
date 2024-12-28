@@ -40,14 +40,8 @@ class VerifyView(UpdateAPIView):
     http_method_names = ['patch']
 
     def patch(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=request.data,context={"otp_secret":kwargs.get('otp_secret')})
         serializer.is_valid(raise_exception=True)
-        phone_number = serializer.validated_data.get('phone_number')
-        otp_code = serializer.validated_data.get('otp_code')
-        otp_secret = kwargs.get('otp_secret')
-        check_otp(phone_number,otp_code,otp_secret)
-        user = User.objects.get(phone_number=phone_number,is_verified=False)
-        user.is_verified=True
-        user.save()
+        user = serializer.save()
         tokens = UserService.create_tokens(user)
         return Response(data=tokens)

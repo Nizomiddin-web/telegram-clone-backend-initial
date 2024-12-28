@@ -46,7 +46,12 @@ class VerifyOTPSerializer(serializers.Serializer):
             return phone_number
         raise ValidationError(_("Phone number not is valid"))
 
-    # def create(self, validated_data):
-    #     phone_number = validated_data.get('phone_number')
-    #     otp_code = validated_data.get('otp_code')
-    #     check_otp(phone_number,otp_code)
+    def create(self, validated_data):
+        phone_number = validated_data.get('phone_number')
+        otp_code = validated_data.get('otp_code')
+        otp_secret = self.context.get('otp_secret')
+        check_otp(phone_number, otp_code, otp_secret)
+        user = User.objects.get(phone_number=phone_number, is_verified=False)
+        user.is_verified = True
+        user.save()
+        return user

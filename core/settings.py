@@ -277,13 +277,13 @@ integrations = [
     sentry_logging,
     DjangoIntegration()
 ]
-
-sentry_sdk.init(
-    dsn=SENTRY_DSN,
-    integrations=integrations,
-    traces_sample_rate=1.0,
-    profiles_sample_rate=1.0
-)
+if not DEBUG:
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=integrations,
+        traces_sample_rate=1.0,
+        profiles_sample_rate=1.0
+    )
 
 # FIREBASE
 # -----------------------------------------------------------------------------------------
