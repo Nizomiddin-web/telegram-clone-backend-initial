@@ -11,7 +11,7 @@ class User(AbstractUser):
     id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
     phone_number = models.CharField(max_length=18,unique=True)
     bio = models.CharField(max_length=200,null=True,blank=True)
-    user_name =  models.CharField(max_length=200,null=True,blank=True)
+    user_name =  models.CharField(max_length=200,null=True,blank=True,unique=True)
     birth_date = models.DateField(null=True,blank=True)
     is_verified = models.BooleanField(default=False)
     is_online = models.BooleanField(default=False)

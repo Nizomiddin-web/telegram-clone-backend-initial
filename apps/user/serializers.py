@@ -71,3 +71,15 @@ class LoginSerializer(serializers.Serializer):
         send_email_task.delay(email="nizomiddinmaniyev99@gmail.com",otp_code=otp_code)
         # send_sms_task.delay(phone_number,otp_code)
         return user
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(max_length=200,allow_null=True,allow_blank=True)
+    def validate_user_name(self,user_name):
+        if user_name=="":
+            raise ValidationError("User name cannot be empty.")
+        return user_name
+
+    class Meta:
+        model = User
+        fields = ['id','phone_number','user_name','bio','birth_date','first_name','last_name']
+        extra_kwargs = {'id':{'read_only':True},'phone_number':{'read_only':True}}
