@@ -9,7 +9,7 @@ from rest_framework.generics import get_object_or_404
 
 from share.tasks import send_email_task, send_sms_task
 from share.utils import generate_otp, check_otp
-from user.models import UserAvatar
+from user.models import UserAvatar, DeviceInfo
 
 User = get_user_model()
 
@@ -91,3 +91,8 @@ class UserAvatarSerializer(serializers.ModelSerializer):
         model = UserAvatar
         fields = ['id','avatar']
         extra_kwargs = {'id':{'read_only':True}}
+
+class DeviceInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DeviceInfo
+        fields = ['device_name','ip_address','last_login']

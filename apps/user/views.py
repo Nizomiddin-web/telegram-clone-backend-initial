@@ -3,14 +3,14 @@ from django_redis import get_redis_connection
 from drf_spectacular.utils import extend_schema_view
 from rest_framework import status
 from rest_framework.generics import CreateAPIView, UpdateAPIView, \
-    ListCreateAPIView, DestroyAPIView, RetrieveAPIView, RetrieveUpdateAPIView
+    ListCreateAPIView, DestroyAPIView, RetrieveAPIView, RetrieveUpdateAPIView, ListAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from user.models import UserAvatar
+from user.models import UserAvatar, DeviceInfo
 from user.paginations import CustomPagination
 from user.permissions import IsUserVerify
 from user.serializers import SignUpSerializer, SignUpResponseSerializer, VerifyOTPSerializer, LoginSerializer, \
-    UserProfileSerializer, UserAvatarSerializer
+    UserProfileSerializer, UserAvatarSerializer, DeviceInfoSerializer
 from user.services import UserService
 User = get_user_model()
 
@@ -94,3 +94,12 @@ class UserAvatarRetrieveDeleteView(RetrieveAPIView,DestroyAPIView):
     queryset = UserAvatar.objects.all()
     serializer_class = UserAvatarSerializer
     permission_classes = [IsUserVerify]
+
+class DeviceListView(ListAPIView):
+    queryset = DeviceInfo.objects.all()
+    serializer_class = DeviceInfoSerializer
+    permission_classes = [IsUserVerify]
+    pagination_class = CustomPagination
+
+    def get_queryset(self):
+        return self.queryset.filter(user=self.request.user)

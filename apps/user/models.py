@@ -43,3 +43,22 @@ class UserAvatar(models.Model):
         verbose_name = "User Avatar"
         verbose_name_plural = "Users Avatar"
         ordering = ['-created_at']
+
+class DeviceInfo(models.Model):
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
+    user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='devices')
+    device_name = models.CharField(max_length=200)
+    ip_address = models.CharField(max_length=20)
+    last_login = models.DateTimeField(null=True,blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'device_info'
+        verbose_name = 'Device Info'
+        verbose_name_plural = 'Devices Info'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"User:{self.user} Device:{self.device_name}"
+
