@@ -1,19 +1,17 @@
 from django.contrib.auth import get_user_model
-from django.shortcuts import render
 from django_redis import get_redis_connection
 from drf_spectacular.utils import extend_schema_view
 from rest_framework import status
-from rest_framework.generics import CreateAPIView, UpdateAPIView, get_object_or_404, RetrieveUpdateAPIView
+from rest_framework.generics import CreateAPIView, UpdateAPIView, \
+    ListCreateAPIView, DestroyAPIView, RetrieveAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from sentry_sdk.integrations.beam import raise_exception
-
-from share.utils import check_otp
+from user.models import UserAvatar
+from user.paginations import CustomPagination
 from user.permissions import IsUserVerify
 from user.serializers import SignUpSerializer, SignUpResponseSerializer, VerifyOTPSerializer, LoginSerializer, \
-    UserProfileSerializer
+    UserProfileSerializer, UserAvatarSerializer
 from user.services import UserService
-
 User = get_user_model()
 
 # Create your views here.
@@ -82,3 +80,17 @@ class UserProfileView(RetrieveUpdateAPIView):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response(serializer.data)
+
+class UserAvatarUploadView(ListCreateAPIView):
+    queryset = UserAvatar.objects.all()
+    serializer_class = UserAvatarSerializer
+    permission_classes = [IsUserVerify,]
+    pagination_class = CustomPagination
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class UserAvatarRetrieveDeleteView(RetrieveAPIView,DestroyAPIView):
+    queryset = UserAvatar.objects.all()
+    serializer_class = UserAvatarSerializer
+    permission_classes = [IsUserVerify]

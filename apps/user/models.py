@@ -30,3 +30,16 @@ class User(AbstractUser):
         verbose_name = 'User'
         verbose_name_plural = 'Users'
         ordering = ['-created_at']
+
+class UserAvatar(models.Model):
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
+    avatar = models.ImageField(upload_to="avatars/",verbose_name="Profile Photos")
+    user = models.ForeignKey(User,on_delete=models.CASCADE,related_name="avatars")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'user_avatar'
+        verbose_name = "User Avatar"
+        verbose_name_plural = "Users Avatar"
+        ordering = ['-created_at']

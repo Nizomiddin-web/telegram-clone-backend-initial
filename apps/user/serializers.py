@@ -9,6 +9,7 @@ from rest_framework.generics import get_object_or_404
 
 from share.tasks import send_email_task, send_sms_task
 from share.utils import generate_otp, check_otp
+from user.models import UserAvatar
 
 User = get_user_model()
 
@@ -83,3 +84,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id','phone_number','user_name','bio','birth_date','first_name','last_name']
         extra_kwargs = {'id':{'read_only':True},'phone_number':{'read_only':True}}
+
+class UserAvatarSerializer(serializers.ModelSerializer):
+    avatar = serializers.ImageField()
+    class Meta:
+        model = UserAvatar
+        fields = ['id','avatar']
+        extra_kwargs = {'id':{'read_only':True}}
