@@ -11,6 +11,6 @@ class BaseEnum(Enum):
     def values(cls):
         return [choice.value for choice in cls]
 
-class TokenType(BaseEnum):
+class TokenType(Enum):
     ACCESS = "access"
     REFRESH = "refresh"

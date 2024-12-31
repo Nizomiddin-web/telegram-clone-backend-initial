@@ -37,3 +37,9 @@ class TokenService:
         valid_tokens = redis_client.smembers(token_key)
         if valid_tokens is not None:
             redis_client.delete(token_key)
+
+    @classmethod
+    def is_token_valid(cls,user_id:uuid.UUID,token:str,token_type:TokenType):
+        redis_client = cls.get_redis_client()
+        token_key = f"user:{user_id}:{token_type}"
+        return redis_client.sismember(token_key,token)

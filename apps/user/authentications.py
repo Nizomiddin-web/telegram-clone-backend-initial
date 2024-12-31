@@ -45,7 +45,7 @@ class CustomJWTAuthentication(JWTAuthentication):
 
 class CustomBasicAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
-        auth_header = request.header.get('Authorization')
+        auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith("Basic "):
             return None
         try:

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django_redis import get_redis_connection
 from drf_spectacular.utils import extend_schema_view
@@ -6,6 +7,10 @@ from rest_framework.generics import CreateAPIView, UpdateAPIView, \
     ListCreateAPIView, DestroyAPIView, RetrieveAPIView, RetrieveUpdateAPIView, ListAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from share.enums import TokenType
+from share.services import TokenService
 from user.models import UserAvatar, DeviceInfo
 from user.paginations import CustomPagination
 from user.permissions import IsUserVerify
@@ -71,6 +76,7 @@ class UserProfileView(RetrieveUpdateAPIView):
     http_method_names = ['get','patch']
 
     def retrieve(self, request, *args, **kwargs):
+        print(TokenService.get_valid_tokens(request.user.id,TokenType.ACCESS))
         serializer = self.get_serializer(instance=request.user)
         return Response(data=serializer.data)
 
@@ -103,3 +109,14 @@ class DeviceListView(ListAPIView):
 
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated,]
+    def post(self,request,*args,**kwargs):
+        print(request.auth)
+        TokenService.delete_tokens(request.user.id,TokenType.ACCESS)
+        TokenService.delete_tokens(request.user.id,TokenType.REFRESH)
+        TokenService.add_token_to_redis(request.user.id,"fake_token",TokenType.ACCESS,settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'])
+        TokenService.add_token_to_redis(request.user.id,"fake_token",TokenType.REFRESH,settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'])
+        # UserService.create_tokens(user=request.user,access="fake_token",refresh="fake_token")
+        return Response(data={"detail":"Successfully logged out"})

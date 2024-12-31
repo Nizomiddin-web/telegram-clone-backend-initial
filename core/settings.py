@@ -168,7 +168,10 @@ AUTH_USER_MODEL = 'user.User'
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS':'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_AUTHENTICATION_CLASSES':[
-        'rest_framework_simplejwt.authentication.JWTAuthentication'
+        # 'user.authentications.XApiKeyAuthentication',
+        # 'user.authentications.CustomBasicAuthentication',
+        'user.authentications.CustomJWTAuthentication',
+        # 'rest_framework_simplejwt.authentication.JWTAuthentication'
     ],
     'DEFAULT_PERMISSION_CLASSES':[
         'rest_framework.permissions.AllowAny'
@@ -223,8 +226,14 @@ SPECTACULAR_SETTINGS = {
     'TITLE': 'Telegram Clone Project API',
     'DESCRIPTION': 'This Projects is Telegram app clone api',
     'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
-    'COMPONENT_SPLIT_REQUEST':False,
+    # 'SERVE_INCLUDE_SCHEMA': False,
+    # 'COMPONENT_SPLIT_REQUEST':True,
+    'AUTHENTICATION_CLASSES':[
+        'user.auth_extensions.CustomJWTAuthenticationSchema'
+    ],
+    'SECURITY': [
+        {'CustomJWTAuth': []},
+    ],
     # OTHER SETTINGS
 }
 
