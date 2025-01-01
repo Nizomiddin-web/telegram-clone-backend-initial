@@ -138,8 +138,6 @@ def test_user_profile_update(
         for key, value in update_data.items():
             assert updated_user[key] == value
     elif expected_status == status.HTTP_400_BAD_REQUEST:
-        print(response.data)
-        print(expected_error)
         assert response.data == expected_error
 
 
