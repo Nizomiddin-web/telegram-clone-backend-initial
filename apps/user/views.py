@@ -113,10 +113,10 @@ class DeviceListView(ListAPIView):
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated,]
     def post(self,request,*args,**kwargs):
-        print(request.auth)
-        TokenService.delete_tokens(request.user.id,TokenType.ACCESS)
-        TokenService.delete_tokens(request.user.id,TokenType.REFRESH)
-        TokenService.add_token_to_redis(request.user.id,"fake_token",TokenType.ACCESS,settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'])
-        TokenService.add_token_to_redis(request.user.id,"fake_token",TokenType.REFRESH,settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'])
+        user = request.user
+        TokenService.delete_tokens(user.id,TokenType.ACCESS)
+        TokenService.delete_tokens(user.id,TokenType.REFRESH)
+        TokenService.add_token_to_redis(user.id,"fake_token",TokenType.ACCESS,settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'])
+        TokenService.add_token_to_redis(user.id,"fake_token",TokenType.REFRESH,settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'])
         # UserService.create_tokens(user=request.user,access="fake_token",refresh="fake_token")
         return Response(data={"detail":"Successfully logged out"})
