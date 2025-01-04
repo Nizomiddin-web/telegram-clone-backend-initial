@@ -3,19 +3,22 @@ from django.contrib.auth import get_user_model
 from django_redis import get_redis_connection
 from drf_spectacular.utils import extend_schema_view
 from rest_framework import status
+from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.generics import CreateAPIView, UpdateAPIView, \
     ListCreateAPIView, DestroyAPIView, RetrieveAPIView, RetrieveUpdateAPIView, ListAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
+from sentry_sdk.integrations.beam import raise_exception
 
 from share.enums import TokenType
 from share.services import TokenService
-from user.models import UserAvatar, DeviceInfo
+from user.models import UserAvatar, DeviceInfo, Contact
 from user.paginations import CustomPagination
-from user.permissions import IsUserVerify
+from user.permissions import IsUserVerify, IsContactUser
 from user.serializers import SignUpSerializer, SignUpResponseSerializer, VerifyOTPSerializer, LoginSerializer, \
-    UserProfileSerializer, UserAvatarSerializer, DeviceInfoSerializer
+    UserProfileSerializer, UserAvatarSerializer, DeviceInfoSerializer, ContactSerializer, ContactSyncSerializer
 from user.services import UserService
 User = get_user_model()
 
@@ -120,3 +123,29 @@ class LogoutView(APIView):
         TokenService.add_token_to_redis(user.id,"fake_token",TokenType.REFRESH,settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'])
         # UserService.create_tokens(user=request.user,access="fake_token",refresh="fake_token")
         return Response(data={"detail":"Successfully logged out"})
+
+class ContactApiView(ModelViewSet):
+    queryset = Contact.objects.all()
+    serializer_class = ContactSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = CustomPagination
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def perform_destroy(self, instance):
+        if self.request.user==instance.user:
+            instance.delete()
+        else:
+            raise NotFound(detail="error")
+
+class ContactSycnApiView(CreateAPIView):
+    queryset = Contact.objects.all()
+    serializer_class = ContactSyncSerializer
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data,many=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=self.request.user)
+        return Response(serializer.data,status=status.HTTP_201_CREATED)

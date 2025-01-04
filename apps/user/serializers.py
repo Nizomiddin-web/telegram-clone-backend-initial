@@ -2,14 +2,14 @@ import re
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
-from rest_framework import serializers
+from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from rest_framework.generics import get_object_or_404
 
 from share.tasks import send_email_task, send_sms_task
 from share.utils import generate_otp, check_otp
-from user.models import UserAvatar, DeviceInfo
+from user.models import UserAvatar, DeviceInfo, Contact
 
 User = get_user_model()
 
@@ -96,3 +96,49 @@ class DeviceInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = DeviceInfo
         fields = ['device_name','ip_address','last_login']
+
+class ContactSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='friend.user_name',read_only=True)
+    phone = serializers.CharField(max_length=20,write_only=True)
+    phone_number = serializers.CharField(source="friend.phone_number",max_length=20,read_only=True)
+
+    class Meta:
+        model = Contact
+        fields = ['id','username','first_name','last_name','phone_number','phone']
+        read_only_fields = ['id','username','phone_number']
+
+    def create(self, validated_data):
+        phone_number = validated_data.pop('phone')
+        friend = User.objects.filter(phone_number=phone_number).first()
+        if not friend:
+            raise ValidationError("User not Found",status.HTTP_404_NOT_FOUND)
+        contact = Contact.objects.create(friend=friend,**validated_data)
+        return contact
+
+class ContactSyncSerializer(serializers.Serializer):
+    phone_number = serializers.CharField(max_length=20)
+    first_name = serializers.CharField(max_length=200,allow_null=True,allow_blank=True)
+    last_name = serializers.CharField(max_length=200,required=False,allow_blank=True,allow_null=True)
+    status = serializers.CharField(max_length=20,read_only=True)
+    def create(self, validated_data):
+        data = {}
+        phone_number = validated_data.pop('phone_number')
+        friend = User.objects.filter(phone_number=phone_number).first()
+        user = validated_data.get('user')
+        if not friend:
+            data['first_name'] = validated_data.get('first_name')
+            data['last_name'] = validated_data.get('last_name')
+            data['phone_number'] = phone_number
+            data['status'] = 'not found'
+        elif friend==user:
+            data['first_name'] = validated_data.get('first_name')
+            data['last_name'] = validated_data.get('last_name')
+            data['phone_number'] = phone_number
+            data['status'] = 'self'
+        else:
+            Contact.objects.create(friend=friend,**validated_data)
+            data['first_name'] = validated_data.get('first_name')
+            data['last_name'] = validated_data.get('last_name')
+            data['phone_number'] = phone_number
+            data['status'] = 'created'
+        return data

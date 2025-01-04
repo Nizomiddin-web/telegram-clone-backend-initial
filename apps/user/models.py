@@ -19,6 +19,7 @@ class User(AbstractUser):
     is_2fa_enabled = models.BooleanField(default=False)
     otp_secret = models.CharField(max_length=200,null=True,blank=True)
     email = models.EmailField(null=True,blank=True)
+    username = models.CharField(max_length=200,null=True,blank=True)
     USERNAME_FIELD = "phone_number"
     objects = UserManager()
 
@@ -62,3 +63,18 @@ class DeviceInfo(models.Model):
     def __str__(self):
         return f"User:{self.user} Device:{self.device_name}"
 
+class Contact(models.Model):
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
+    user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='contacts')
+    friend = models.OneToOneField(User,on_delete=models.SET_NULL,null=True)
+    first_name = models.CharField(max_length=40)
+    last_name = models.CharField(max_length=40,null=True,blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'contact'
+        verbose_name = 'Contact'
+        verbose_name_plural = 'Contacts'
+        ordering = ['-created_at']
