@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from user.views import SignUpView, VerifyView, LoginView, UserProfileView, UserAvatarUploadView, \
     UserAvatarRetrieveDeleteView, DeviceListView, LogoutView, ContactApiView, ContactSycnApiView, Enable2FAView, \
-    Verify2FAView, UserPresenceApiView
+    Verify2FAView, UserPresenceApiView, NotificationPreferenceApiView
 
 router = DefaultRouter()
 router.register(r'',ContactApiView,basename='contact')
@@ -19,6 +19,7 @@ urlpatterns = [
     path('2fa/',Enable2FAView.as_view(),name='user-2fa'),
     path('2fa/verify/',Verify2FAView.as_view(),name='user-2fa-verify'),
     path('<uuid:pk>/status/',UserPresenceApiView.as_view(),name='user-status'),
+    path('notifications/',NotificationPreferenceApiView.as_view(),name='user-notification'),
     path('contacts/sync/',ContactSycnApiView.as_view(),name='contact-sync'),
     path('contacts/',include(router.urls)),
 

@@ -10,7 +10,7 @@ from rest_framework.generics import get_object_or_404
 
 from share.tasks import send_email_task, send_sms_task
 from share.utils import generate_otp, check_otp
-from user.models import UserAvatar, DeviceInfo, Contact
+from user.models import UserAvatar, DeviceInfo, Contact, NotificationPreference
 
 User = get_user_model()
 
@@ -161,3 +161,9 @@ class UserPresenceResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['is_online','last_seen']
+
+class NotificationPreferenceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NotificationPreference
+        fields = ['id','notifications_enabled','device_token']
+        read_only_fields = ['id']

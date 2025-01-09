@@ -1,3 +1,5 @@
+from functools import partial
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password, check_password
@@ -15,12 +17,12 @@ from sentry_sdk.integrations.beam import raise_exception
 
 from share.enums import TokenType
 from share.services import TokenService
-from user.models import UserAvatar, DeviceInfo, Contact
+from user.models import UserAvatar, DeviceInfo, Contact, NotificationPreference
 from user.paginations import CustomPagination
 from user.permissions import IsUserVerify, IsContactUser
 from user.serializers import SignUpSerializer, SignUpResponseSerializer, VerifyOTPSerializer, LoginSerializer, \
     UserProfileSerializer, UserAvatarSerializer, DeviceInfoSerializer, ContactSerializer, ContactSyncSerializer, \
-    Request2FASerializer, Verify2FARequestSerializer, UserPresenceResponseSerializer
+    Request2FASerializer, Verify2FARequestSerializer, UserPresenceResponseSerializer, NotificationPreferenceSerializer
 from user.services import UserService
 User = get_user_model()
 
@@ -214,3 +216,21 @@ class UserPresenceApiView(RetrieveAPIView):
             "last_seen":instance.last_seen
         }
         return Response(data)
+
+class NotificationPreferenceApiView(RetrieveUpdateAPIView):
+    queryset = NotificationPreference.objects.all()
+    serializer_class = NotificationPreferenceSerializer
+    permission_classes = [IsAuthenticated,]
+    http_method_names = ['get','patch']
+    def retrieve(self, request, *args, **kwargs):
+        notification,created = NotificationPreference.objects.get_or_create(user=request.user)
+        serializer = self.get_serializer(instance=notification)
+        return Response(serializer.data)
+
+    def patch(self, request, *args, **kwargs):
+        user=request.user
+        notification = self.get_queryset().get(user=user)
+        serializer = self.get_serializer(notification,request.data,partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)

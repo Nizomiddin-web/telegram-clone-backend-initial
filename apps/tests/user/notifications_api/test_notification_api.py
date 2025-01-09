@@ -26,6 +26,7 @@ def test_get_notification_preference(mocker, tokens, api_client, user_factory):
     response = client.get("/api/users/notifications/")
 
     assert response.status_code == status.HTTP_200_OK
+    print(response.data)
     assert response.data == {
         "id": response.data["id"],
         "notifications_enabled": False,

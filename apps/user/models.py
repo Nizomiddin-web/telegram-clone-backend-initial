@@ -78,3 +78,18 @@ class Contact(models.Model):
         verbose_name = 'Contact'
         verbose_name_plural = 'Contacts'
         ordering = ['-created_at']
+
+class NotificationPreference(models.Model):
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
+    user = models.OneToOneField(User,on_delete=models.CASCADE,related_name='notifications')
+    notifications_enabled = models.BooleanField(default=False)
+    device_token = models.CharField(max_length=200,null=True,blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'notification'
+        verbose_name = 'Notification'
+        verbose_name_plural = 'Notifications'
+        ordering = ['-created_at']
