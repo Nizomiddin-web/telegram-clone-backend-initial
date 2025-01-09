@@ -156,3 +156,8 @@ class Request2FASerializer(serializers.Serializer):
 class Verify2FARequestSerializer(serializers.Serializer):
     user_id = serializers.UUIDField()
     password = serializers.CharField(min_length=8)
+
+class UserPresenceResponseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['is_online','last_seen']

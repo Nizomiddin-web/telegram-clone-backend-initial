@@ -20,7 +20,7 @@ from user.paginations import CustomPagination
 from user.permissions import IsUserVerify, IsContactUser
 from user.serializers import SignUpSerializer, SignUpResponseSerializer, VerifyOTPSerializer, LoginSerializer, \
     UserProfileSerializer, UserAvatarSerializer, DeviceInfoSerializer, ContactSerializer, ContactSyncSerializer, \
-    Request2FASerializer, Verify2FARequestSerializer
+    Request2FASerializer, Verify2FARequestSerializer, UserPresenceResponseSerializer
 from user.services import UserService
 User = get_user_model()
 
@@ -203,3 +203,14 @@ class Verify2FAView(CreateAPIView):
             return Response(tokens)
         return Response({"detail":"Invalid password"},status=status.HTTP_400_BAD_REQUEST)
 
+
+class UserPresenceApiView(RetrieveAPIView):
+    queryset = User.objects.all()
+    permission_classes = [IsAuthenticated]
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = {
+            "is_online":instance.is_online,
+            "last_seen":instance.last_seen
+        }
+        return Response(data)
