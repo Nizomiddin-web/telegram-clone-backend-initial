@@ -1,11 +1,12 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password, check_password
 from django_redis import get_redis_connection
 from drf_spectacular.utils import extend_schema_view
 from rest_framework import status
 from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.generics import CreateAPIView, UpdateAPIView, \
-    ListCreateAPIView, DestroyAPIView, RetrieveAPIView, RetrieveUpdateAPIView, ListAPIView
+    ListCreateAPIView, DestroyAPIView, RetrieveAPIView, RetrieveUpdateAPIView, ListAPIView, get_object_or_404
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -18,7 +19,8 @@ from user.models import UserAvatar, DeviceInfo, Contact
 from user.paginations import CustomPagination
 from user.permissions import IsUserVerify, IsContactUser
 from user.serializers import SignUpSerializer, SignUpResponseSerializer, VerifyOTPSerializer, LoginSerializer, \
-    UserProfileSerializer, UserAvatarSerializer, DeviceInfoSerializer, ContactSerializer, ContactSyncSerializer
+    UserProfileSerializer, UserAvatarSerializer, DeviceInfoSerializer, ContactSerializer, ContactSyncSerializer, \
+    Request2FASerializer, Verify2FARequestSerializer
 from user.services import UserService
 User = get_user_model()
 
@@ -53,6 +55,12 @@ class VerifyView(UpdateAPIView):
         serializer = self.get_serializer(data=request.data,context={"otp_secret":kwargs.get('otp_secret')})
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+        if user.is_2fa_enabled:
+            data = {
+             "detail": "2FA enabled, please verify your password",
+             "user_id": user.id
+            }
+            return Response(data=data)
         tokens = UserService.create_tokens(user)
         return Response(data=tokens)
 
@@ -130,6 +138,11 @@ class ContactApiView(ModelViewSet):
     permission_classes = [IsAuthenticated]
     pagination_class = CustomPagination
 
+    def get_queryset(self):
+        if self.action=='list':
+            return self.queryset.filter(user=self.request.user)
+        return super().get_queryset()
+
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
@@ -149,3 +162,44 @@ class ContactSycnApiView(CreateAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save(user=self.request.user)
         return Response(serializer.data,status=status.HTTP_201_CREATED)
+
+class Enable2FAView(CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = Request2FASerializer
+    permission_classes = [IsAuthenticated,]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(["OTP secret must be at least 8 characters long."],status=status.HTTP_400_BAD_REQUEST)
+        type = serializer.validated_data.get('type')
+        otp_secret = serializer.validated_data.get('otp_secret',None)
+        user = request.user
+        if type:
+            user.is_2fa_enabled=True
+            user.otp_secret = make_password(otp_secret)
+            user.save()
+            return Response({"detail":"2FA enabled."},)
+        else:
+            user.is_2fa_enabled=False
+            user.otp_secret=None
+            user.save()
+            return Response({"detail":"2FA disabled."})
+
+class Verify2FAView(CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = Verify2FARequestSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user_id = serializer.validated_data.get('user_id')
+        password = serializer.validated_data.get('password')
+        user = User.objects.filter(id=user_id).first()
+        if not user:
+            return Response({"detail":"Invalid user"},status=status.HTTP_400_BAD_REQUEST)
+        if check_password(password,user.otp_secret):
+            tokens = UserService.create_tokens(user)
+            return Response(tokens)
+        return Response({"detail":"Invalid password"},status=status.HTTP_400_BAD_REQUEST)
+

@@ -2,6 +2,7 @@ import re
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
+from django.core.validators import MinLengthValidator
 from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
@@ -142,3 +143,16 @@ class ContactSyncSerializer(serializers.Serializer):
             data['phone_number'] = phone_number
             data['status'] = 'created'
         return data
+
+class Request2FASerializer(serializers.Serializer):
+    type = serializers.BooleanField()
+    otp_secret = serializers.CharField(required=False,allow_null=True,allow_blank=True)
+
+    def validate(self,data):
+        if len(data.get('otp_secret'))<8 and data.get('type'):
+            raise ValidationError(["OTP secret must be at least 8 characters long"])
+        return data
+
+class Verify2FARequestSerializer(serializers.Serializer):
+    user_id = serializers.UUIDField()
+    password = serializers.CharField(min_length=8)
