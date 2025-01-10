@@ -25,6 +25,7 @@ urlpatterns = [
             #Project apps urls
             #---------------------------------------------------------------------
             path('users/',include('user.urls')),
+            path('chats/',include('chat.urls')),
 
             #Swagger path
             #---------------------------------------------------------------------
