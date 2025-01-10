@@ -52,6 +52,7 @@ EXTERNAL_APPS = [
 LOCAL_APPS = [
     'user',
     'share',
+    'chat',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + EXTERNAL_APPS + LOCAL_APPS
@@ -175,7 +176,15 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PERMISSION_CLASSES':[
         'rest_framework.permissions.AllowAny'
-    ]
+    ],
+    'DEFAULT_THROTTLE_CLASSES':[
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES':{
+        'anon':'100/day',
+        'user':'1000/day'
+    }
 }
 
 # JWT
