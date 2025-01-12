@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from chat.models import Chat
+from chat.models import Chat, Message
 from user.serializers import UserProfileSerializer
 User = get_user_model()
 
@@ -28,3 +28,8 @@ class ChatSerializer(serializers.ModelSerializer):
             raise ValidationError("this chat already exists!")
         return Chat.objects.create(owner=owner, user=user)
 
+
+class MessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Message
+        fields = '__all__'
