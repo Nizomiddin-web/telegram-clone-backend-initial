@@ -43,11 +43,11 @@ class TokenAuthMiddleware(BaseMiddleware):
     async def __call__(self, scope,receive,send):
         close_old_connections()
         token_key = None
-        query_sting = scope.get("query_string",b"").decode()
+        query_string = scope.get("query_string",b"").decode()
 
         #Queary string orqali tokkeni olish
-        if query_sting:
-            token = dict(x.split("=") for x in query_sting.split("&").get("token"))
+        if query_string:
+            token_key = dict(x.split("=") for x in query_string.split("&")).get('token')
         #Foydalanuvchi aniqlash va scope'ga qo'shish
         scope['user']  = await get_user(token_key)
         return await super().__call__(scope,receive,send)

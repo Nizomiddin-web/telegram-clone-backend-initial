@@ -2,6 +2,9 @@ import uuid
 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from datetime import datetime
+
+from django.utils.timezone import now
 
 from apps.user.manager import UserManager
 
@@ -25,6 +28,9 @@ class User(AbstractUser):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def update_last_seen(self):
+        self.last_seen = now()
 
     class Meta:
         db_table = 'user'

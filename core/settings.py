@@ -175,7 +175,7 @@ REST_FRAMEWORK = {
         # 'user.authentications.XApiKeyAuthentication',
         # 'user.authentications.CustomBasicAuthentication',
         'user.authentications.CustomJWTAuthentication',
-        # 'rest_framework_simplejwt.authentication.JWTAuthentication'
+        'rest_framework_simplejwt.authentication.JWTAuthentication'
     ],
     'DEFAULT_PERMISSION_CLASSES':[
         'rest_framework.permissions.AllowAny'

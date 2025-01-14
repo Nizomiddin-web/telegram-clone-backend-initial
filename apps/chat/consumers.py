@@ -5,11 +5,10 @@ from djangochannelsrestframework.generics import GenericAsyncAPIConsumer
 from djangochannelsrestframework.observer.generics import ObserverModelInstanceMixin
 from django.contrib.auth.models import AnonymousUser
 from djangochannelsrestframework.observer.generics import action
-from rest_framework_simplejwt.utils import aware_utcnow
-from tutorial.quickstart.serializers import UserSerializer
+
 
 from chat.models import Chat, ChatParticipant
-from chat.serializers import ChatSerializer,MessageSerializer
+from chat.serializers import ChatSerializer, MessageSerializer, UserSerializer
 
 
 class ChatConsumer(ObserverModelInstanceMixin,GenericAsyncAPIConsumer,AsyncJsonWebsocketConsumer):
@@ -21,6 +20,7 @@ class ChatConsumer(ObserverModelInstanceMixin,GenericAsyncAPIConsumer,AsyncJsonW
         self.user = self.scope.get("user",AnonymousUser()) #foydalanuvchini olish
         self.chat_id = self.scope["url_route"]["kwargs"]["pk"] #Chat ID sini olish
         self.chat = await self.get_chat(self.chat_id) #chat obyektini olish
+        print(self.chat,"ddjjjjjjjjjjjjjjjjjjjjjj")
         self.participants = await self.current_users(self.chat) #Hozirgi ishtirokchilarni olish
 
         #Agar foydalanuchi autentifikatsiyadan o'tmagan bo'lsa,ulanishni yopamiz
@@ -37,7 +37,7 @@ class ChatConsumer(ObserverModelInstanceMixin,GenericAsyncAPIConsumer,AsyncJsonW
         await self.channel_layer.group_add(f"chat__{self.chat_id}",self.channel_name)
         await self.add_user_to_chat(self.chat_id) # Foydalanuvchini chatga qo'shish
         await self.accept() #Ulanishni qabul qilish
-        await self.update_user_status(is_only=True) #Foydalanuvchi holatini yangilash
+        await self.update_user_status(is_online=True) #Foydalanuvchi holatini yangilash
         await self.notify_users() #Barcha foydalanuvchilarga yangi ishtirokchilar haqida xabar berish
         await self.get_messages(self.chat_id) #Oldingi habarlarni olish
 
@@ -50,6 +50,7 @@ class ChatConsumer(ObserverModelInstanceMixin,GenericAsyncAPIConsumer,AsyncJsonW
             await self.channel_layer.group_discard(
                 f"chat__{self.chat_id}",self.channel_name
             )
+        print("to'xtadi")
         await super().disconnect(code)
 
     #Barcha foydalanuvchilarga ishtirokchilar ro'yhatini yuborish
@@ -81,6 +82,7 @@ class ChatConsumer(ObserverModelInstanceMixin,GenericAsyncAPIConsumer,AsyncJsonW
             return list(chat.messages.order_by("sent_at")) #Habarlarni sanaga ko'ra tartiblash
         except Chat.DoesNotExist:
             return []
+
     @database_sync_to_async
     def serialize_messages(self,messages):
         return MessageSerializer(messages,many=True,context={"user":self.user}).data
