@@ -35,7 +35,7 @@ class Message(models.Model):
     text = models.TextField(null=True,blank=True)
     image = models.ImageField(upload_to="message/images/",null=True,blank=True)
     file = models.FileField(upload_to="message/files/",null=True,blank=True)
-    sent_at = models.DateTimeField()
+    sent_at = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
     liked_by = models.ForeignKey(User,on_delete=models.SET_NULL,null=True,blank=True)
 

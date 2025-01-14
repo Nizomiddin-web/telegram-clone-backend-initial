@@ -7,8 +7,9 @@ from django.contrib.auth.models import AnonymousUser
 from djangochannelsrestframework.observer.generics import action
 
 
-from chat.models import Chat, ChatParticipant
+from chat.models import Chat, ChatParticipant, Message
 from chat.serializers import ChatSerializer, MessageSerializer, UserSerializer
+from user.models import User
 
 
 class ChatConsumer(ObserverModelInstanceMixin,GenericAsyncAPIConsumer,AsyncJsonWebsocketConsumer):
@@ -128,3 +129,74 @@ class ChatConsumer(ObserverModelInstanceMixin,GenericAsyncAPIConsumer,AsyncJsonW
         self.user.is_online = is_online
         self.user.update_last_seen() #Oxirgi ko'rilgan vaqtni yangilash
         self.user.save()
+
+    async def chat_message(self,event):
+        """
+        Chatdagi habarni yuboradi.
+        event['text'] orqali habar matnini yuboradi
+        """
+        await self.send_json({"action":"new_message","data":event['text']})
+
+    @action()
+    async def create_message(self,pk,data,**kwargs):
+        """
+        Yangi habar yaratish va uni chat guruhiga yuborish
+        pk - chat guruhi identifikatori
+        """
+        chat = await self.get_chat(pk)
+        if not chat:
+            return
+        user = self.scope['user']
+        recipient = await self.get_recipient(chat,user)
+        if not recipient:
+            return
+
+        message = await self.save_message(chat,user,data)
+        serialized_message = await self.serialize_message(message)
+        await self.channel_layer.group_send(
+            f"chat__{pk}",{"type":"chat_message","text":serialized_message}
+        )
+    @database_sync_to_async
+    def save_message(self,chat:Chat,user:User,data:dict):
+        """
+        Yangi habarni saqlash
+        Xabarni matni,rasm yoki fayl saqlanadi
+        """
+        valid_keys = {"text","image","file"}
+        message_data = {key:data.get(key) for key in valid_keys if data.get(key)}
+        message = Message.objects.create(chat=chat,sender=user,**message_data)
+        return message
+
+    @database_sync_to_async
+    def get_recipient(self,chat:Chat,user:User):
+        """
+        Xabarni qabul qiluvchisini olish
+        Agar foydalanuvchi chat egasi bo'lsa,unda ishtirokchi (user) oladi
+        """
+        if chat.owner==user:
+            return chat.user
+        elif chat.user==user:
+            return chat.owner
+        return None
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
