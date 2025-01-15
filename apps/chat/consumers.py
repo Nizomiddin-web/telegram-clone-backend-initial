@@ -84,6 +84,15 @@ class ChatConsumer(ObserverModelInstanceMixin,GenericAsyncAPIConsumer,AsyncJsonW
         except Chat.DoesNotExist:
             return []
 
+    # Bitta habarni olish
+    @database_sync_to_async
+    def get_message(self,pk):
+        try:
+            message = Message.objects.get(pk=pk)
+            return message
+        except Message.DoesNotExist:
+            return None
+
     @database_sync_to_async
     def serialize_messages(self,messages):
         return MessageSerializer(messages,many=True,context={"user":self.user}).data
@@ -196,6 +205,51 @@ class ChatConsumer(ObserverModelInstanceMixin,GenericAsyncAPIConsumer,AsyncJsonW
         scheduled_message = ScheduledMessage.objects.create(chat=chat,sender=user,**data)
         return scheduled_message
 
+    async def message_liked(self,event):
+        await self.send_json({"action":"message_liked","data":event['message']})
+
+    async def message_unliked(self,event):
+        await self.send_json({"action":"message_unliked","data":event['message']})
+
+    @action()
+    async def like_message(self,message_id,**kwargs):
+        user = self.scope['user']
+        message = await self.get_message(message_id)
+        if message:
+            await self.add_like(message,user)
+            serialized_message = await self.serialize_message(message)
+            await self.channel_layer.group_send(
+                f"chat__{message.chat.id}",
+                {
+                    "type":"message_liked",
+                    "message":serialized_message
+                }
+            )
+
+    @action()
+    async def unlike_message(self,message_id,**kwargs):
+        user = self.scope['user']
+        message = await self.get_message(message_id)
+        if message:
+            await self.remove_like(message,user)
+            serialized_message = await self.serialize_message(message)
+            await self.channel_layer.group_send(
+                f"chat__{message.chat.id}",
+                {
+                    "type":"message_unliked",
+                    "message":serialized_message
+                }
+            )
+
+    @database_sync_to_async
+    def add_like(self,message,user):
+        message.liked_by.add(user)
+        message.save()
+
+    @database_sync_to_async
+    def remove_like(self,message,user):
+        message.liked_by.remove(user)
+        message.save()
 
 
 
