@@ -42,14 +42,14 @@ class ChatSerializer(serializers.ModelSerializer):
 
 
 class MessageSerializer(serializers.ModelSerializer):
-    sender = serializers.StringRelatedField()  # Yoki boshqa kerakli serializatsiya
-    # liked_by = UserSerializer(many=True)  # Liked users
+    sender = serializers.StringRelatedField()  # Or another appropriate serialization
+    liked_by = UserSerializer(many=True,read_only=True)  # Liked users
     chat = ChatSerializer(required=False)
     likes_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Message
-        fields = ['id', 'chat', 'sender', 'text', 'image', 'file', 'sent_at', 'is_read', 'liked_by','likes_count']
+        fields = ['id', 'chat', 'sender', 'text', 'image', 'file', 'sent_at', 'is_read', 'liked_by', 'likes_count']
 
     def get_likes_count(self, obj):
         return obj.liked_by.count()
