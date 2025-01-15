@@ -1,12 +1,15 @@
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.db.models import Q
 from rest_framework import status
 from rest_framework.exceptions import ValidationError, NotFound
+from rest_framework.generics import ListCreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from chat.models import Chat
-from chat.serializers import ChatSerializer
+from chat.models import Chat, Message
+from chat.serializers import ChatSerializer, MessageSerializer
 from user.paginations import CustomPagination
 
 
@@ -35,4 +38,32 @@ class ChatCrudApiView(ModelViewSet):
         if instance.owner != self.request.user:
             raise NotFound("User is not chat owner")
         instance.delete()
+
+class MessageListCreateView(ListCreateAPIView):
+    queryset = Message.objects.all()
+    serializer_class = MessageSerializer
+    pagination_class = CustomPagination
+    permission_classes = [IsAuthenticated,]
+
+    def perform_create(self, serializer):
+        chat_id = self.kwargs.get('pk')
+        chat = Chat.objects.get(pk=chat_id)
+        message = serializer.save(sender=self.request.user,chat=chat)
+        if message.file or message.image:
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"chat_{message.chat.id}",
+                {
+                    "type":"chat_message",
+                    "message_id":str(message.id),
+                    "sender":{
+                        "id":str(message.sender.id),
+                        "user_name":str(message.sender.username),
+                    },
+                    "text":message.text,
+                    "image":message.image.url if message.image.url else None,
+                    "file":message.file if message.file else None,
+                    "sent_at":message.sent_at.isoformat()
+                },
+            )
 

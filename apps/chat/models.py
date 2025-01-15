@@ -37,7 +37,7 @@ class Message(models.Model):
     file = models.FileField(upload_to="message/files/",null=True,blank=True)
     sent_at = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
-    liked_by = models.ForeignKey(User,on_delete=models.SET_NULL,null=True,blank=True)
+    liked_by = models.ManyToManyField(User,null=True,blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

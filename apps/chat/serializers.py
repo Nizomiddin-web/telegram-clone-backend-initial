@@ -1,11 +1,16 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from tutorial.quickstart.serializers import UserSerializer
+
 
 from chat.models import Chat, Message, ChatParticipant
 from user.serializers import UserProfileSerializer
 User = get_user_model()
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "phone_number", "user_name", "bio", "birth_date", "first_name", "last_name"]
 
 class ChatParticipantSerializer(serializers.ModelSerializer):
     class Meta:
@@ -38,16 +43,16 @@ class ChatSerializer(serializers.ModelSerializer):
 
 class MessageSerializer(serializers.ModelSerializer):
     sender = serializers.StringRelatedField()  # Yoki boshqa kerakli serializatsiya
-    liked_by = UserSerializer(many=True)  # Liked users
+    # liked_by = UserSerializer(many=True)  # Liked users
     chat = ChatSerializer(required=False)
-    # likes_count = serializers.SerializerMethodField()
+    likes_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Message
-        fields = ['id', 'chat', 'sender', 'text', 'image', 'file', 'sent_at', 'is_read', 'liked_by']
+        fields = ['id', 'chat', 'sender', 'text', 'image', 'file', 'sent_at', 'is_read', 'liked_by','likes_count']
 
-    # def get_likes_count(self, obj):
-    #     return obj.liked_by.count()
+    def get_likes_count(self, obj):
+        return obj.liked_by.count()
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -65,7 +70,3 @@ class MessageSerializer(serializers.ModelSerializer):
 
         return message
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ["id", "phone_number", "user_name", "bio", "birth_date", "first_name", "last_name"]
