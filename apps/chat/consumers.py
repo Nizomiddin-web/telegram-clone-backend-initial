@@ -7,7 +7,7 @@ from django.contrib.auth.models import AnonymousUser
 from djangochannelsrestframework.observer.generics import action
 
 
-from chat.models import Chat, ChatParticipant, Message
+from chat.models import Chat, ChatParticipant, Message, ScheduledMessage
 from chat.serializers import ChatSerializer, MessageSerializer, UserSerializer
 from user.models import User
 
@@ -179,7 +179,22 @@ class ChatConsumer(ObserverModelInstanceMixin,GenericAsyncAPIConsumer,AsyncJsonW
             return chat.owner
         return None
 
+    @action()
+    async def schedule_message(self, pk, data, **kwargs):
+        chat = await self.get_chat(pk)
+        if not chat:
+            return None
+        user = self.scope['user']
+        scheduled_time = data.get('scheduled_time')
+        if scheduled_time:
+            await self.save_scheduled_message(chat, user, data)
 
+
+
+    @database_sync_to_async
+    def save_scheduled_message(self,chat:Chat,user:User,data:dict):
+        scheduled_message = ScheduledMessage.objects.create(chat=chat,sender=user,**data)
+        return scheduled_message
 
 
 

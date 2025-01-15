@@ -42,8 +42,20 @@ class Message(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        db_table='message'
+        verbose_name = 'Message'
+        verbose_name_plural = 'Messages'
+        ordering = ['-created_at']
+
 class ScheduledMessage(models.Model):
     chat = models.ForeignKey(Chat,on_delete=models.CASCADE,related_name='scheduled_messages')
     sender = models.ForeignKey(User,on_delete=models.CASCADE,related_name='scheduled_messages')
+    text = models.TextField()
     scheduled_time = models.DateTimeField()
     sent = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'schedule_message'
+        verbose_name = 'Schedule Message'
+        verbose_name_plural = 'Schedule Messages'
