@@ -26,6 +26,7 @@ urlpatterns = [
             #---------------------------------------------------------------------
             path('users/',include('user.urls')),
             path('chats/',include('chat.urls')),
+            path('groups/',include('group.urls')),
 
             #Swagger path
             #---------------------------------------------------------------------

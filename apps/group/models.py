@@ -10,7 +10,6 @@ class BaseModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     class Meta:
-        ordering = ['-created_at']
         abstract = True
 
 class Group(BaseModel):
@@ -23,6 +22,7 @@ class Group(BaseModel):
         db_table = 'group'
         verbose_name='Group'
         verbose_name_plural='Groups'
+        ordering = ['-created_at']
 
 class GroupParticipant(BaseModel):
     group = models.ForeignKey(Group,on_delete=models.CASCADE)
@@ -39,6 +39,9 @@ class GroupMessage(BaseModel):
     is_read = models.BooleanField(default=False)
     liked_by = models.ManyToManyField(User,related_name="liked_messages")
 
+    class Meta:
+        ordering = ['-created_at']
+
 class GroupScheduledMessage(BaseModel):
     group = models.ForeignKey(Group,on_delete=models.CASCADE)
     sender = models.ForeignKey(User,on_delete=models.CASCADE)
@@ -46,7 +49,10 @@ class GroupScheduledMessage(BaseModel):
     scheduled_time = models.DateTimeField()
     sent = models.BooleanField(default=False)
 
+    class Meta:
+        ordering = ['-created_at']
+
 class GroupPermission(BaseModel):
     group = models.ForeignKey(Group,on_delete=models.CASCADE)
     can_send_messages = models.BooleanField(default=True)
-    can_send_media = models.BooleanField(default=False)
+    can_send_media = models.BooleanField(default=True)
