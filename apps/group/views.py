@@ -2,13 +2,13 @@ from django.db.models import Q
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.exceptions import NotFound
-from rest_framework.generics import UpdateAPIView
+from rest_framework.generics import UpdateAPIView, RetrieveDestroyAPIView, CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from sentry_sdk.integrations.beam import raise_exception
 
-from group.models import Group, GroupPermission
+from group.models import Group, GroupPermission, GroupParticipant
 from group.permissions import IsGroupOwnerOrReadOnly, IsGroupOwnerUsePermission
 from group.serializers import GroupSerializer, GroupPermissionSerializer
 from user.paginations import CustomPagination
@@ -56,3 +56,25 @@ class GroupPermissionsApi(UpdateAPIView):
         serializer.save()
         return Response(serializer.data)
 
+class GroupMembershipApiView(RetrieveDestroyAPIView,CreateAPIView):
+    queryset = Group.objects.all()
+    permission_classes = [IsAuthenticated,]
+
+    # def get_serializer_class(self):
+    #     if self.request.GET
+
+    def create(self, request, *args, **kwargs):
+        group = self.get_object()
+        if group.is_private:
+            return Response({"detail":"This group is private."},status=status.HTTP_403_FORBIDDEN)
+        if group.members.filter(id=request.user.id).exists():
+            return Response({"detail":"You are already a member of this group."},status=status.HTTP_400_BAD_REQUEST)
+        group.members.add(request.user)
+        return Response({"detail":"You have successfully joined the group."},status=status.HTTP_200_OK)
+
+    def destroy(self, request, *args, **kwargs):
+        group = self.get_object()
+        if not group.members.filter(id=request.user.id).exists():
+            return Response({"detail":"You are not a member of this group."},status=status.HTTP_400_BAD_REQUEST)
+        group.members.remove(request.user)
+        return Response({"detail":"You have successfully left the group."})

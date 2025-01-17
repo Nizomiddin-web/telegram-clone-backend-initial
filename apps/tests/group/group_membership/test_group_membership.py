@@ -46,7 +46,7 @@ class TestJoinLeaveGroupView:
         assert response.data["detail"] == "You have successfully joined the group."
 
         self.group.refresh_from_db()
-
+        print(self.group.members)
         assert self.group.members.filter(id=self.user.id).exists()
 
     def test_join_private_group(self, setup, private_group_data):
