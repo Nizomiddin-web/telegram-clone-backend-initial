@@ -10,7 +10,7 @@ from sentry_sdk.integrations.beam import raise_exception
 
 from group.models import Group, GroupPermission, GroupParticipant
 from group.permissions import IsGroupOwnerOrReadOnly, IsGroupOwnerUsePermission
-from group.serializers import GroupSerializer, GroupPermissionSerializer
+from group.serializers import GroupSerializer, GroupPermissionSerializer, GroupMemberSerializer
 from user.paginations import CustomPagination
 
 
@@ -78,3 +78,16 @@ class GroupMembershipApiView(RetrieveDestroyAPIView,CreateAPIView):
             return Response({"detail":"You are not a member of this group."},status=status.HTTP_400_BAD_REQUEST)
         group.members.remove(request.user)
         return Response({"detail":"You have successfully left the group."})
+
+class GroupMemberApiView(UpdateAPIView):
+    queryset = Group.objects.all()
+    serializer_class = GroupMemberSerializer
+    permission_classes = [IsAuthenticated,IsGroupOwnerOrReadOnly]
+    http_method_names = ['patch']
+
+    def patch(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if not instance.is_private:
+            raise NotFound(detail="This group is not private.")
+        return super().patch(request,*args,**kwargs)
+
