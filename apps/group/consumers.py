@@ -1,14 +1,15 @@
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
+from django.contrib.auth import get_user_model
 from djangochannelsrestframework.generics import GenericAsyncAPIConsumer
 from djangochannelsrestframework.observer.generics import action
 from django.contrib.auth.models import AnonymousUser
 from rest_framework_simplejwt.utils import aware_utcnow
 
 from chat.serializers import UserSerializer
-from .models import Group,GroupParticipant
+from .models import Group, GroupParticipant, GroupMessage, GroupPermission
 from .serializers import GroupMessageSerializer
-
+User = get_user_model()
 
 # GroupConsumer Websocket uchun ishlaydigan Consumer bo'lib,guruhdagi foydalanuvchilarni boshqaradi.
 class GroupConsumer(GenericAsyncAPIConsumer,AsyncJsonWebsocketConsumer):
@@ -79,14 +80,14 @@ class GroupConsumer(GenericAsyncAPIConsumer,AsyncJsonWebsocketConsumer):
             {"action":"get_messages","messages":serialized_messages}
         )
 
-    # @action()
-    # async def get_group_messages(self,pk,**kwargs):
-    #     """Guruhdagi habarlarni olish va yuborish"""
-    #     messages = await self.fetch_group_messages(pk)
-    #     serialized_messages = await self.serialize_messages(messages)
-    #     await self.send_json(
-    #         {"action": "get_group_messages", "messages": serialized_messages}
-    #     )
+    @action()
+    async def get_group_messages(self,pk,**kwargs):
+        """Guruhdagi habarlarni olish va yuborish"""
+        messages = await self.fetch_group_messages(pk)
+        serialized_messages = await self.serialize_messages(messages)
+        await self.send_json(
+            {"action": "get_group_messages", "messages": serialized_messages}
+        )
 
     @database_sync_to_async
     def get_group(self):
@@ -126,7 +127,7 @@ class GroupConsumer(GenericAsyncAPIConsumer,AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def update_user_status(self,is_online):
         """Foydalanuvchi onlayn holatini va ohirgi ko'rish vaqtini yangilash"""
-        self.user.is_online=True
+        self.user.is_online = is_online
         self.user.update_last_seen()
         self.user.save()
 
@@ -151,6 +152,61 @@ class GroupConsumer(GenericAsyncAPIConsumer,AsyncJsonWebsocketConsumer):
             return await self.is_user_group_member()
 
         return True
+
+    @database_sync_to_async
+    def can_send_message(self,pk):
+        group_permission = GroupPermission.objects.filter(group_id=pk).first()
+        return group_permission.can_send_messages
+
+    # habar yuborish fuksiyasi
+    @action()
+    async def create_message(self,pk,data,**kwargs):
+        """Yangi habar yaratish va uni guruh a'zolariga tarqatish"""
+
+        #agar foydalanuvchi guruh a'zosi bo'lmasa
+        if not await self.is_user_group_member():
+            await self.send_json(
+                {"detail":"You are not a member of this group. Please join first."}
+            )
+            return
+
+        # Agar foydalanuvchi habar yuborish huquqi bo'lmasa
+        if not await self.can_send_message(self.group_id):
+            await self.send_json(
+                {"detail":"Sizning habar yuborish huquqingiz yo'q."}
+            )
+            return
+
+        #Xabarni saqlash
+        message = await self.save_message(self.group,self.user,data)
+        serialized_message = await self.serialize_message(message)
+
+        await self.channel_layer.group_send(
+            f"group__{pk}",
+            {
+                "type":"group_message",
+                "text":serialized_message
+            }
+        )
+
+    # Xabarni qabul qiluvchi handler
+    async def group_message(self, event):
+        """Guruhdagi xabarni mijozlarga yuborish"""
+        text = event.get("text", {})
+        print(text)
+        await self.send_json({"action": "new_message", "data": text})
+
+    @database_sync_to_async
+    def save_message(self,group:Group,user:User,data:dict):
+        """Guruhga yangi habarni saqlash"""
+        valid_keys = {"text","image","file"}
+        message_data = {key:data.get(key) for key in valid_keys if data.get(key)}
+        return GroupMessage.objects.create(group=group,sender=user,**message_data)
+
+    @database_sync_to_async
+    def serialize_message(self,message):
+        return GroupMessageSerializer(message).data
+
 
 
 

@@ -25,6 +25,8 @@ class GroupMemberSerializer(serializers.ModelSerializer):
         fields = ['members']
 
 class GroupMessageSerializer(serializers.ModelSerializer):
+    group = GroupSerializer(read_only=True)
+    sender = UserSerializer()
     class Meta:
         model = GroupMessage
         fields = '__all__'
