@@ -3,7 +3,8 @@ from rest_framework import serializers
 from rest_framework.relations import PrimaryKeyRelatedField
 
 from chat.serializers import UserSerializer
-from group.models import Group, GroupPermission
+from group.models import Group, GroupPermission, GroupMessage
+
 User = get_user_model()
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -22,3 +23,8 @@ class GroupMemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
         fields = ['members']
+
+class GroupMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GroupMessage
+        fields = '__all__'

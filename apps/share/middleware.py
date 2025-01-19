@@ -53,5 +53,5 @@ class TokenAuthMiddleware(BaseMiddleware):
         return await super().__call__(scope,receive,send)
 
 #WebSocket Uchun middleware Stack
-def JWTAuthMiddlewareStack(inner):
+def JwtAuthMiddlewareStack(inner):
     return CookieMiddleware(SessionMiddleware(TokenAuthMiddleware(inner)))
