@@ -2,15 +2,16 @@ from django.db.models import Q
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.exceptions import NotFound
-from rest_framework.generics import UpdateAPIView, RetrieveDestroyAPIView, CreateAPIView
+from rest_framework.generics import UpdateAPIView, RetrieveDestroyAPIView, CreateAPIView, ListCreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from sentry_sdk.integrations.beam import raise_exception
 
-from group.models import Group, GroupPermission, GroupParticipant
-from group.permissions import IsGroupOwnerOrReadOnly, IsGroupOwnerUsePermission
-from group.serializers import GroupSerializer, GroupPermissionSerializer, GroupMemberSerializer
+from group.models import Group, GroupPermission, GroupParticipant, GroupMessage
+from group.permissions import IsGroupOwnerOrReadOnly, IsGroupOwnerUsePermission, IsGroupCanSendMediaPermission
+from group.serializers import GroupSerializer, GroupPermissionSerializer, GroupMemberSerializer, GroupMessageSerializer
 from user.paginations import CustomPagination
 
 
@@ -91,3 +92,20 @@ class GroupMemberApiView(UpdateAPIView):
             raise NotFound(detail="This group is not private.")
         return super().patch(request,*args,**kwargs)
 
+class GroupSendMediaFileApiView(ListCreateAPIView):
+   queryset = Group.objects.all()
+   serializer_class = GroupMessageSerializer
+   permission_classes = [IsAuthenticated,IsGroupCanSendMediaPermission]
+   pagination_class = CustomPagination
+
+   def list(self, request, *args, **kwargs):
+       group = self.get_object()
+       if not group:
+           return Response(data={"detail":"Group Not Found"},status=status.HTTP_404_NOT_FOUND)
+       serializer = self.get_serializer(group.messages.all(),many=True)
+       return Response(serializer.data)
+
+   def perform_create(self, serializer):
+       group=self.get_object()
+       sender = self.request.user
+       serializer.save(group=group,sender=sender)
