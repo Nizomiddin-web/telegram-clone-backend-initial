@@ -304,6 +304,10 @@ CELERY_BEAT_SCHEDULE = {
     "send-scheduled-message":{
         'task':"chat.tasks.send_scheduled_message",
         "schedule":10.0,
+    },
+    "send-scheduled-group-message":{
+        'task':"group.tasks.send_group_scheduled_message",
+        "schedule":10.0
     }
 }
 

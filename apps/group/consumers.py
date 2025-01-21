@@ -7,7 +7,7 @@ from django.contrib.auth.models import AnonymousUser
 from rest_framework_simplejwt.utils import aware_utcnow
 
 from chat.serializers import UserSerializer
-from .models import Group, GroupParticipant, GroupMessage, GroupPermission
+from .models import Group, GroupParticipant, GroupMessage, GroupPermission, GroupScheduledMessage
 from .serializers import GroupMessageSerializer
 User = get_user_model()
 
@@ -206,6 +206,23 @@ class GroupConsumer(GenericAsyncAPIConsumer,AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def serialize_message(self,message):
         return GroupMessageSerializer(message).data
+
+
+    @action()
+    async def schedule_message(self,data,**kwargs):
+        group = self.get_group()
+        if not group:
+            return None
+        user = self.scope['user']
+        scheduled_time = data.get('scheduled_time')
+        if scheduled_time:
+            await self.save_scheduled_message(group,user,data)
+
+
+    @database_sync_to_async
+    async def save_scheduled_message(self,group:Group,user:User,data:dict):
+        scheduled_message = GroupScheduledMessage.objects.create(group=group,sender=user,**data)
+        return scheduled_message
 
 
 
