@@ -220,7 +220,7 @@ class GroupConsumer(GenericAsyncAPIConsumer,AsyncJsonWebsocketConsumer):
 
 
     @database_sync_to_async
-    async def save_scheduled_message(self,group:Group,user:User,data:dict):
+    def save_scheduled_message(self,group:Group,user:User,data:dict):
         scheduled_message = GroupScheduledMessage.objects.create(group=group,sender=user,**data)
         return scheduled_message
 
