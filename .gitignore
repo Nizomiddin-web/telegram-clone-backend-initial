@@ -217,7 +217,7 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 
-telegramcloneapi-firebase-adminsdk-fbsvc-99ed3f2919.json
+
 
 ### Windows template
 # Windows thumbnail cache files
@@ -351,4 +351,4 @@ tests/.pytest_cache
 .pytest_cache
 celerybeat-schedule.db
 *.db
-telegramcloneapi-firebase-adminsdk-fbsvc-99ed3f2919.json
+
