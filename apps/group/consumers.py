@@ -203,6 +203,7 @@ class GroupConsumer(GenericAsyncAPIConsumer,AsyncJsonWebsocketConsumer):
         message_data = {key:data.get(key) for key in valid_keys if data.get(key)}
         return GroupMessage.objects.create(group=group,sender=user,**message_data)
 
+    # Bitta messageni seriyalash
     @database_sync_to_async
     def serialize_message(self,message):
         return GroupMessageSerializer(message).data
@@ -224,8 +225,58 @@ class GroupConsumer(GenericAsyncAPIConsumer,AsyncJsonWebsocketConsumer):
         scheduled_message = GroupScheduledMessage.objects.create(group=group,sender=user,**data)
         return scheduled_message
 
+    @database_sync_to_async
+    def get_message(self,pk):
+        try:
+            group_message=GroupMessage.objects.get(pk=pk)
+            return group_message
+        except GroupMessage.DoesNotExist:
+            return None
 
+    async def message_liked(self,event):
+        print(event['message'])
+        await self.send_json({"action":"message_liked","data":event['message']})
 
+    async def message_unliked(self,event):
+        await self.send_json({"action":"message_unliked","data":event['message']})
+
+    @action()
+    async def like_message(self,message_id,**kwargs):
+        user = self.scope['user']
+        message = await self.get_message(message_id)
+        if message:
+            await self.add_like(message,user)
+            serialized_message = await self.serialize_message(message)
+            await self.channel_layer.group_send(
+                f"group__{message.group.id}",
+                {
+                    "type":"message_liked",
+                    "message":serialized_message
+                }
+            )
+    @action()
+    async def unlike_message(self,message_id,**kwargs):
+        user = self.scope['user']
+        message = await self.get_message(message_id)
+        if message:
+            await self.remove_like(message,user)
+            serialized_message = await self.serialize_message(message)
+            await self.channel_layer.group_send(
+                f"group__{message.group.id}",
+                {
+                    "type":"message_unliked",
+                    "message":serialized_message
+                }
+            )
+    @database_sync_to_async
+    def add_like(self,message,user):
+        message.liked_by.add(user)
+        message.save()
+
+    @database_sync_to_async
+    def remove_like(self,message,user):
+        message.liked_by.remove(user)
+        message.save()
 
 
 

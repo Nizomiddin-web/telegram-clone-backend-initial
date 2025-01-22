@@ -21,7 +21,6 @@ class ChatConsumer(ObserverModelInstanceMixin,GenericAsyncAPIConsumer,AsyncJsonW
         self.user = self.scope.get("user",AnonymousUser()) #foydalanuvchini olish
         self.chat_id = self.scope["url_route"]["kwargs"]["pk"] #Chat ID sini olish
         self.chat = await self.get_chat(self.chat_id) #chat obyektini olish
-        print(self.chat,"ddjjjjjjjjjjjjjjjjjjjjjj")
         self.participants = await self.current_users(self.chat) #Hozirgi ishtirokchilarni olish
 
         #Agar foydalanuchi autentifikatsiyadan o'tmagan bo'lsa,ulanishni yopamiz
