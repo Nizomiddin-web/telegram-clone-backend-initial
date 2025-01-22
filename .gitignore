@@ -351,3 +351,4 @@ tests/.pytest_cache
 .pytest_cache
 celerybeat-schedule.db
 *.db
+telegramcloneapi-firebase-adminsdk-fbsvc-99ed3f2919.json
