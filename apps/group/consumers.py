@@ -1,3 +1,4 @@
+from asgiref.sync import sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.contrib.auth import get_user_model
@@ -7,6 +8,7 @@ from django.contrib.auth.models import AnonymousUser
 from rest_framework_simplejwt.utils import aware_utcnow
 
 from chat.serializers import UserSerializer
+from share.tasks import send_push_notification
 from .models import Group, GroupParticipant, GroupMessage, GroupPermission, GroupScheduledMessage
 from .serializers import GroupMessageSerializer
 User = get_user_model()
@@ -188,6 +190,32 @@ class GroupConsumer(GenericAsyncAPIConsumer,AsyncJsonWebsocketConsumer):
                 "text":serialized_message
             }
         )
+        # yangi qo'shilgan kodlar
+        group_members = await self.get_group_members()
+
+        for member_data in group_members:
+            user = await self.get_user(member_data["id"])
+
+            if user.is_online is False:
+                try:
+                    user_notification_pref = await sync_to_async(
+                        lambda: getattr(user, "notifications", None)
+                    )()
+
+                    if (
+                            user_notification_pref is not None
+                            and user_notification_pref.notifications_enabled
+                    ):
+                        device_token = await sync_to_async(
+                            lambda: user_notification_pref.device_token
+                        )()
+                        send_push_notification.delay(
+                            token=device_token,
+                            title="New Message in Group",
+                            body=message.text,
+                        )
+                except Exception as e:
+                    print(f"Error: {e}")
 
     # Xabarni qabul qiluvchi handler
     async def group_message(self, event):
@@ -231,6 +259,14 @@ class GroupConsumer(GenericAsyncAPIConsumer,AsyncJsonWebsocketConsumer):
             group_message=GroupMessage.objects.get(pk=pk)
             return group_message
         except GroupMessage.DoesNotExist:
+            return None
+
+    @database_sync_to_async
+    def get_user(self,pk):
+        try:
+            user = User.objects.get(pk=pk)
+            return user
+        except User.DoesNotExist:
             return None
 
     async def message_liked(self,event):

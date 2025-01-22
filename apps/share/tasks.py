@@ -4,6 +4,8 @@ from celery import shared_task
 from celery.utils.log import  get_task_logger
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
+from firebase_admin import messaging
+
 from core import settings
 from twilio.rest import Client
 
@@ -49,3 +51,40 @@ def send_email_task(email:str,otp_code:str):
     except Exception as e:
         print(f"Failed to send email: {e}")
         return 400
+
+
+@shared_task(bind=True)
+def send_push_notification(self, token, title, body):
+    try:
+        message = messaging.Message(
+            notification=messaging.Notification(
+                title=title,
+                body=body,
+            ),
+            token=token,
+        )
+        response = messaging.send(message)
+        logger.info("Successfully sent message: %s", response)
+    except Exception as e:
+        logger.error("Failed to send push notification: %s", str(e))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

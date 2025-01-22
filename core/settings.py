@@ -1,8 +1,9 @@
 import os
 import sys
+import firebase_admin
 from datetime import timedelta
 from email.policy import default
-
+from firebase_admin import credentials
 import sentry_sdk
 import logging
 
@@ -299,7 +300,8 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_WORKER_SEND_TASK_EVENTS = True
-
+CELERY_ALWAYS_EAGER=True
+CELERY_TASK_ALWAYS_EAGER=True
 CELERY_BEAT_SCHEDULE = {
     "send-scheduled-message":{
         'task':"chat.tasks.send_scheduled_message",
@@ -334,7 +336,8 @@ if not DEBUG:
 
 # FIREBASE
 # -----------------------------------------------------------------------------------------
-
+cred = credentials.Certificate("telegramcloneapi-firebase-adminsdk-fbsvc-99ed3f2919.json")
+firebase_admin.initialize_app(cred)
 
 # SMS API
 # -----------------------------------------------------------------------------------------
