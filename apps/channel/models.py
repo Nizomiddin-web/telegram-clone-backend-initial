@@ -4,8 +4,6 @@ from enum import Enum
 from django.contrib.auth import get_user_model
 from django.db import models
 
-from tests.channel.channel_app_setup.test_channel_setup import ChannelType, ChannelMembershipType
-
 User = get_user_model()
 # Create your models here.
 class BaseModel(models.Model):
@@ -15,6 +13,25 @@ class BaseModel(models.Model):
 
     class Meta:
         abstract = True
+
+class BaseEnum(Enum):
+    @classmethod
+    def choices(cls):
+        return [(choice.value, choice.name) for choice in cls]
+
+    @classmethod
+    def values(cls):
+        return [choice.value for choice in cls]
+
+
+class ChannelType(BaseEnum):
+    PUBLIC = "public"
+    PRIVATE = "private"
+
+
+class ChannelMembershipType(BaseEnum):
+    ADMIN = "admin"
+    MEMBER = "member"
 
 
 
