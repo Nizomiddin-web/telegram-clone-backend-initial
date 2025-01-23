@@ -48,7 +48,7 @@ def test_channel_membership_creation(user_factory):
 
     assert membership.user == user
     assert membership.channel == channel
-    assert membership.role == ChannelMembershipType.MEMBER
+    assert membership.role.value == ChannelMembershipType.MEMBER.value
 
     # Test unique_together constraint
     with pytest.raises(ValidationError):
