@@ -2,25 +2,27 @@ import pytest
 from django.core.exceptions import ValidationError
 from enum import Enum
 
-
-class BaseEnum(Enum):
-    @classmethod
-    def choices(cls):
-        return [(choice.value, choice.name) for choice in cls]
-
-    @classmethod
-    def values(cls):
-        return [choice.value for choice in cls]
+from channel.models import ChannelType, ChannelMembershipType
 
 
-class ChannelType(BaseEnum):
-    PUBLIC = "public"
-    PRIVATE = "private"
-
-
-class ChannelMembershipType(BaseEnum):
-    ADMIN = "admin"
-    MEMBER = "member"
+# class BaseEnum(Enum):
+#     @classmethod
+#     def choices(cls):
+#         return [(choice.value, choice.name) for choice in cls]
+#
+#     @classmethod
+#     def values(cls):
+#         return [choice.value for choice in cls]
+#
+#
+# class ChannelType(BaseEnum):
+#     PUBLIC = "public"
+#     PRIVATE = "private"
+#
+#
+# class ChannelMembershipType(BaseEnum):
+#     ADMIN = "admin"
+#     MEMBER = "member"
 
 
 @pytest.mark.django_db
@@ -48,7 +50,7 @@ def test_channel_membership_creation(user_factory):
 
     assert membership.user == user
     assert membership.channel == channel
-    assert membership.role.value == ChannelMembershipType.MEMBER.value
+    assert membership.role == ChannelMembershipType.MEMBER
 
     # Test unique_together constraint
     with pytest.raises(ValidationError):
