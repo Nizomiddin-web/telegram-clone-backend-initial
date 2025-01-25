@@ -37,13 +37,9 @@ class ChannelMembershipType(BaseEnum):
 
 class Channel(BaseModel):
     name = models.CharField(max_length=50)
-    description = models.CharField(max_length=200)
+    description = models.CharField(max_length=200,null=True,blank=True)
     owner = models.ForeignKey(User,on_delete=models.CASCADE)
-    type = models.CharField(max_length=30,choices=ChannelType.choices(),default=ChannelType.PUBLIC)
-
-    @property
-    def channel_type(self):
-        return ChannelType(self.type).value
+    channel_type = models.CharField(max_length=30,choices=ChannelType.choices(),default=ChannelType.PUBLIC.value)
 
     class Meta:
         db_table = 'channel'
@@ -55,8 +51,8 @@ class Channel(BaseModel):
         return self.name
 
 class ChannelMembership(BaseModel):
-    channel = models.ForeignKey(Channel,on_delete=models.CASCADE)
-    user = models.ForeignKey(User,on_delete=models.CASCADE)
+    channel = models.ForeignKey(Channel,on_delete=models.CASCADE,related_name='memberships')
+    user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='memberships')
     role = models.CharField(max_length=200,choices=ChannelMembershipType.choices(),default=ChannelMembershipType.MEMBER.value)
     joined_at = models.DateTimeField(auto_now_add=True)
 
