@@ -43,7 +43,7 @@ class Channel(BaseModel):
 
     @property
     def channel_type(self):
-        return ChannelType(self.type)
+        return ChannelType(self.type).value
 
     class Meta:
         db_table = 'channel'
@@ -57,10 +57,11 @@ class Channel(BaseModel):
 class ChannelMembership(BaseModel):
     channel = models.ForeignKey(Channel,on_delete=models.CASCADE)
     user = models.ForeignKey(User,on_delete=models.CASCADE)
-    role = models.CharField(max_length=200,choices=ChannelMembershipType.choices(),default=ChannelMembershipType.MEMBER)
+    role = models.CharField(max_length=200,choices=ChannelMembershipType.choices(),default=ChannelMembershipType.MEMBER.value)
     joined_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        unique_together = ('user','channel')
         db_table = 'channel_membership'
         verbose_name='Channel Membership'
         verbose_name_plural='Channels Membership'
@@ -68,7 +69,7 @@ class ChannelMembership(BaseModel):
 
 class ChannelMessage(BaseModel):
     channel = models.ForeignKey(Channel,on_delete=models.CASCADE)
-    user = models.ForeignKey(User,on_delete=models.CASCADE)
+    sender = models.ForeignKey(User,on_delete=models.CASCADE)
     text = models.TextField(null=True,blank=True)
     image = models.ImageField(upload_to="channel/messages/images/",null=True,blank=True)
     file = models.FileField(upload_to="channel/messages/files/",null=True,blank=True)
@@ -93,7 +94,7 @@ class ChannelMessage(BaseModel):
         return None
 
     def __str__(self):
-        return f"Message from {self.user.username} in {self.channel.name}"
+        return f"Message from {self.sender.username} in {self.channel.name}"
 
 class ChannelScheduledMessage(BaseModel):
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)

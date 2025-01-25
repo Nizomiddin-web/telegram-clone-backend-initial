@@ -221,7 +221,6 @@ class GroupConsumer(GenericAsyncAPIConsumer,AsyncJsonWebsocketConsumer):
     async def group_message(self, event):
         """Guruhdagi xabarni mijozlarga yuborish"""
         text = event.get("text", {})
-        print(text)
         await self.send_json({"action": "new_message", "data": text})
 
     @database_sync_to_async

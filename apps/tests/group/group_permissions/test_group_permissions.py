@@ -49,6 +49,5 @@ class TestGroupPermissionSerializer:
 
         if expected_status == status.HTTP_200_OK:
             group_permission = GroupPermission.objects.get(group=group)
-            print(group_permission)
             assert group_permission.can_send_messages is False
             assert group_permission.can_send_media is True

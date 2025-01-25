@@ -73,7 +73,7 @@ def test_create_contact(mocker, api_client, tokens, user, friend):
     }
 
     response = client.post(CONTACT_LIST_CREATE_URL, data, format="json")
-    # print(response.json())
+
     assert response.status_code == status.HTTP_201_CREATED
     assert Contact.objects.count() == 1
     assert Contact.objects.filter(friend=friend).exists()
@@ -142,7 +142,6 @@ def test_sync_contacts(mocker, api_client, tokens, user, friend):
     ]
 
     response = client.post(CONTACT_SYNC_URL, data, format="json")
-    print(response.json())
     assert response.status_code == status.HTTP_201_CREATED
     assert len(response.data) == 2
 

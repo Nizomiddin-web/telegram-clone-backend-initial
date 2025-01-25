@@ -55,6 +55,7 @@ class TestChatListCreateView:
 
         payload = {"owner_id": str(owner.id), "user_id": str(user.id)}
         response = client.post("/api/chats/", payload, format="json")
+
         assert response.status_code == status.HTTP_201_CREATED
         assert response.data["owner"]["id"] == str(owner.id)
         assert response.data["user"]["id"] == str(user.id)

@@ -87,7 +87,7 @@ class TestMessageListCreateView:
             response = client.post(
                 f"/api/chats/{chat.id}/messages/", payload, format="multipart"
             )
-            print(response.json())
+
             assert response.status_code == status.HTTP_201_CREATED
             message = Message.objects.get(text="Message with file and image")
 

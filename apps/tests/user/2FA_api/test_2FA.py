@@ -44,7 +44,6 @@ def test_enable_2fa(
     mock_redis_client.smembers.return_value = {access.encode()}
 
     response = client.post("/api/users/2fa/", data, format="json")
-    print(response.json())
     assert response.status_code == expected_status
 
     if expected_status == status.HTTP_400_BAD_REQUEST:
@@ -81,7 +80,7 @@ def test_disable_2fa_success(mocker, tokens, api_client, user):
     data = {"type": False, "otp_secret": ""}
 
     response = client.post("/api/users/2fa/", data, format="json", user=user)
-    print(response.json())
+
     assert response.status_code == status.HTTP_200_OK
     assert response.data == {"detail": "2FA disabled."}
     user.refresh_from_db()

@@ -50,6 +50,7 @@ class TestGroupMessageCreateView:
         response = self.client.post(
             f"/api/groups/{self.group.id}/messages/", data, format="multipart"
         )
+
         assert response.status_code == status.HTTP_201_CREATED
         assert GroupMessage.objects.count() == 1
 
