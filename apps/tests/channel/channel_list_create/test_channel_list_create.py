@@ -69,7 +69,6 @@ class TestChannelListCreateView:
             client.force_authenticate(user=user)
 
         response = client.post("/api/channels/", data=data)
-        print(response.json())
         assert response.status_code == expected_status
 
         if expected_channel_created:
