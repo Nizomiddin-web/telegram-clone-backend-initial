@@ -1,6 +1,4 @@
 from django.db.models import Q
-from django.shortcuts import render
-from rest_framework.exceptions import NotFound
 from rest_framework.generics import ListCreateAPIView, UpdateAPIView, DestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -66,9 +64,3 @@ class ChannelMembershipUpdateDestroyApiView(UpdateAPIView,DestroyAPIView):
             return member
         return super().get_object()
 
-    # def perform_destroy(self, instance):
-    #     user_id = self.kwargs.get('member_id')
-    #     member = ChannelMembership.objects.filter(Q(channel=instance) & Q(user__id=user_id)).first()
-    #     if member:
-    #         member.delete()
-    #     raise NotFound(detail="Member not found")
