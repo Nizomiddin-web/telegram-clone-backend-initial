@@ -2,7 +2,6 @@ import os
 import sys
 import firebase_admin
 from datetime import timedelta
-from email.policy import default
 from firebase_admin import credentials
 import sentry_sdk
 import logging

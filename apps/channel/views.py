@@ -7,8 +7,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from channel.models import Channel, ChannelMembership, ChannelMessage, ChannelScheduledMessage
-from channel.permissions import IsChannelOwner, IsChannelPrivate, IsChannelOwnerAndLeftMember, ChannelMessageOwner, \
-    IsChannelMember
+from channel.permissions import IsChannelOwner, IsChannelPrivate, IsChannelOwnerAndLeftMember, ChannelMessageOwner
 from channel.serializers import ChannelSerializer, ChannelMembershipSerializer, ChannelMessageSerializer, \
     ChannelScheduleMessageSerializer
 from channel.tasks import send_push_notification
