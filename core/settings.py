@@ -361,7 +361,7 @@ EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD",default="")
 # -----------------------------------------------------------------------------------------
 ELASTICSEARCH_DSL = {
     "default": {
-        "hosts":"http:/elasticsearch:9200"
+        "hosts":"http://elasticsearch:9200"
     }
 }
 ENABLE_ES = config("ENABLE_ES",default=False,cast=bool)
