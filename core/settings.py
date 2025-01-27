@@ -1,5 +1,7 @@
 import os
 import sys
+from email.policy import default
+
 import firebase_admin
 from datetime import timedelta
 from firebase_admin import credentials
@@ -49,7 +51,7 @@ EXTERNAL_APPS = [
     "django_celery_beat",
     "debug_toolbar",
     "channels",
-    # "django_elasticsearch_dsl",
+    "django_elasticsearch_dsl",
 ]
 
 LOCAL_APPS = [
@@ -359,9 +361,11 @@ EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD",default="")
 
 # ELASTICSEARCH
 # -----------------------------------------------------------------------------------------
+ELASTICSEARCH_HOST = config("ELASTICSEARCH_HOST",default="localhost")
+ELASTICSEARCH_PORT = config("ELASTICSEARCH_PORT",default=9200)
 ELASTICSEARCH_DSL = {
     "default": {
-        "hosts":"http://elasticsearch:9200"
+        "hosts":f"http://{ELASTICSEARCH_HOST}:{ELASTICSEARCH_PORT}"
     }
 }
 ENABLE_ES = config("ENABLE_ES",default=False,cast=bool)
