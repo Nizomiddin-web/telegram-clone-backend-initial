@@ -34,7 +34,7 @@ class TestLikeMessageView:
         response = client.post(
             f"/api/channels/{setup_data['channel'].id}/messages/{setup_data['message'].id}/like/"
         )
-
+        print(response.json())
         assert response.status_code == status.HTTP_200_OK
         assert response.data["detail"] == "Message liked."
         assert setup_data["message"].likes.filter(id=setup_data["user"].id).exists()

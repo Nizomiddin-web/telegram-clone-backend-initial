@@ -1,4 +1,5 @@
 from django.db.models import Q
+from rest_framework import status
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.generics import ListCreateAPIView, UpdateAPIView, DestroyAPIView, RetrieveUpdateDestroyAPIView,CreateAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -6,7 +7,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from channel.models import Channel, ChannelMembership, ChannelMessage, ChannelScheduledMessage
-from channel.permissions import IsChannelOwner, IsChannelPrivate, IsChannelOwnerAndLeftMember, ChannelMessageOwner
+from channel.permissions import IsChannelOwner, IsChannelPrivate, IsChannelOwnerAndLeftMember, ChannelMessageOwner, \
+    IsChannelMember
 from channel.serializers import ChannelSerializer, ChannelMembershipSerializer, ChannelMessageSerializer, \
     ChannelScheduleMessageSerializer
 from channel.tasks import send_push_notification
@@ -110,4 +112,22 @@ class ChannelScheduleMessageApiView(CreateAPIView):
         if channel.owner != user:
             raise PermissionDenied(detail="Sizga ushbu kanalda xabar yaratishga ruxsat berilmagan.")
         serializer.save(channel=channel, sender=user)
+
+class ChannelMessageLikeRemoveApiView(CreateAPIView,DestroyAPIView):
+    queryset = ChannelMessage.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        channel_message = self.get_object()
+        if not channel_message.likes.filter(id=self.request.user.id).exists():
+            channel_message.likes.add(self.request.user)
+            return Response(data={"detail":"Message liked."})
+        return Response(data={"detail":"Message already liked."},status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        channel_message = self.get_object()
+        if not channel_message.likes.filter(id=self.request.user.id).exists():
+            return Response(data={"detail": "Message is not liked."}, status=status.HTTP_400_BAD_REQUEST)
+        channel_message.likes.remove(self.request.user)
+        return Response(data={"detail":"Like removed."},status=status.HTTP_200_OK)
 
