@@ -1,14 +1,15 @@
 from django.db.models import Q
 from rest_framework.exceptions import NotFound, PermissionDenied
-from rest_framework.generics import ListCreateAPIView, UpdateAPIView, DestroyAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListCreateAPIView, UpdateAPIView, DestroyAPIView, RetrieveUpdateDestroyAPIView,CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from channel.models import Channel, ChannelMembership, ChannelMessage
+from channel.models import Channel, ChannelMembership, ChannelMessage, ChannelScheduledMessage
 from channel.permissions import IsChannelOwner, IsChannelPrivate, IsChannelOwnerAndLeftMember, ChannelMessageOwner
-from channel.serializers import ChannelSerializer, ChannelMembershipSerializer, ChannelMessageSerializer
-from share.tasks import send_push_notification
+from channel.serializers import ChannelSerializer, ChannelMembershipSerializer, ChannelMessageSerializer, \
+    ChannelScheduleMessageSerializer
+from channel.tasks import send_push_notification
 from user.paginations import CustomPagination
 
 
@@ -94,3 +95,19 @@ class ChannelMessageRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
     queryset = ChannelMessage.objects.all()
     serializer_class = ChannelMessageSerializer
     permission_classes = [IsAuthenticated,ChannelMessageOwner]
+
+class ChannelScheduleMessageApiView(CreateAPIView):
+    queryset = ChannelScheduledMessage.objects.all()
+    serializer_class = ChannelScheduleMessageSerializer
+    permission_classes = [IsAuthenticated,]
+
+    def perform_create(self, serializer):
+        channel_id = self.kwargs.get('channel_id')
+        channel = Channel.objects.filter(pk=channel_id).first()
+        if not channel:
+            raise NotFound(detail="Channel Not Found")
+        user = self.request.user
+        if channel.owner != user:
+            raise PermissionDenied(detail="Sizga ushbu kanalda xabar yaratishga ruxsat berilmagan.")
+        serializer.save(channel=channel, sender=user)
+

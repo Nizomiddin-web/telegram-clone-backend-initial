@@ -2,8 +2,9 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from channel.models import Channel, ChannelMembership, ChannelMessage
+from channel.models import Channel, ChannelMembership, ChannelMessage, ChannelScheduledMessage
 from chat.serializers import UserSerializer
+from django.utils.timezone import now
 User = get_user_model()
 
 class ChannelSerializer(serializers.ModelSerializer):
@@ -36,3 +37,14 @@ class ChannelMessageSerializer(serializers.ModelSerializer):
         model = ChannelMessage
         fields = ['id','channel','user','text','media','file','likes','created_at']
 
+class ChannelScheduleMessageSerializer(serializers.ModelSerializer):
+    channel = ChannelSerializer(read_only=True)
+    user = UserSerializer(read_only=True,source="sender")
+    class Meta:
+        model=ChannelScheduledMessage
+        fields = ['id', 'channel', 'user', 'text', 'image', 'file', 'scheduled_time', 'sent']
+
+    def validate_scheduled_time(self,scheduled_time):
+        if scheduled_time<= now():
+            raise ValidationError("scheduled_time error")
+        return scheduled_time

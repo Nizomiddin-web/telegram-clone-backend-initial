@@ -41,6 +41,7 @@ class TestCreateScheduledMessageView:
             format="json",
         )
 
+        print(response.json())
         assert response.status_code == status.HTTP_201_CREATED
         assert ChannelScheduledMessage.objects.filter(
             channel=setup_data["channel"]

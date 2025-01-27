@@ -311,6 +311,10 @@ CELERY_BEAT_SCHEDULE = {
     "send-scheduled-group-message":{
         'task':"group.tasks.send_group_scheduled_message",
         "schedule":10.0
+    },
+    "send-scheduled-channel-message":{
+        'task':"channel.tasks.send_channel_scheduled_message",
+        "schedule":10.0
     }
 }
 
