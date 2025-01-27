@@ -30,6 +30,7 @@ distlib==0.3.9
 Django==4.2.16
 django-celery-beat==2.7.0
 django-debug-toolbar==4.4.5
+django-elasticsearch-dsl==8.0
 django-filter==24.3
 django-redis==5.4.0
 django-timezone-field==7.0
