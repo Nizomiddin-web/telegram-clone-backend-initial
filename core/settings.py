@@ -49,7 +49,7 @@ EXTERNAL_APPS = [
     "django_celery_beat",
     "debug_toolbar",
     "channels",
-    # "django_elasticsearch_dsl",
+    "django_elasticsearch_dsl",
 ]
 
 LOCAL_APPS = [
