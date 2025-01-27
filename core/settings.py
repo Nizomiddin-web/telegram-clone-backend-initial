@@ -59,7 +59,7 @@ LOCAL_APPS = [
     'chat',
     'group',
     'channel',
-    "django_elasticsearch_dsl",
+    # "django_elasticsearch_dsl",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + EXTERNAL_APPS + LOCAL_APPS
