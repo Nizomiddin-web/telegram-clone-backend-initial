@@ -51,7 +51,6 @@ EXTERNAL_APPS = [
     "django_celery_beat",
     "debug_toolbar",
     "channels",
-    # "django_elasticsearch_dsl",
 ]
 
 LOCAL_APPS = [
@@ -59,7 +58,8 @@ LOCAL_APPS = [
     'share',
     'chat',
     'group',
-    'channel'
+    'channel',
+    "django_elasticsearch_dsl",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + EXTERNAL_APPS + LOCAL_APPS
