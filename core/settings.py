@@ -49,7 +49,7 @@ EXTERNAL_APPS = [
     "django_celery_beat",
     "debug_toolbar",
     "channels",
-    "django_elasticsearch_dsl",
+    # "django_elasticsearch_dsl",
 ]
 
 LOCAL_APPS = [
@@ -359,12 +359,12 @@ EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD",default="")
 
 # ELASTICSEARCH
 # -----------------------------------------------------------------------------------------
-ELASTICSEARCH_DSL = {
-    "default": {
-        "hosts":"http://elasticsearch:9200"
-    }
-}
-ENABLE_ES = config("ENABLE_ES",default=False,cast=bool)
+# ELASTICSEARCH_DSL = {
+#     "default": {
+#         "hosts":"http://elasticsearch:9200"
+#     }
+# }
+# ENABLE_ES = config("ENABLE_ES",default=False,cast=bool)
 
 # LOGGING
 # -----------------------------------------------------------------------------------------
