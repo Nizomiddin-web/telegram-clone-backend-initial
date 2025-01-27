@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from djangochannelsrestframework.generics import GenericAsyncAPIConsumer
 from djangochannelsrestframework.observer.generics import action
 from django.contrib.auth.models import AnonymousUser
-from rest_framework_simplejwt.utils import aware_utcnow
+
 
 from chat.serializers import UserSerializer
 from share.tasks import send_push_notification

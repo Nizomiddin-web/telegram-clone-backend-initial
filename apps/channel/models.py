@@ -67,10 +67,10 @@ class ChannelMessage(BaseModel):
     channel = models.ForeignKey(Channel,on_delete=models.CASCADE)
     sender = models.ForeignKey(User,on_delete=models.CASCADE)
     text = models.TextField(null=True,blank=True)
-    image = models.ImageField(upload_to="channel/messages/images/",null=True,blank=True)
+    media = models.ImageField(upload_to="channel/messages/images/",null=True,blank=True)
     file = models.FileField(upload_to="channel/messages/files/",null=True,blank=True)
     sent_at = models.DateTimeField(auto_now_add=True)
-    likes = models.ManyToManyField(User,related_name="likes_channel")
+    likes = models.ManyToManyField(User,related_name="likes_channel",null=True,blank=True)
 
 
     class Meta:
@@ -78,16 +78,6 @@ class ChannelMessage(BaseModel):
         verbose_name='Channel Message'
         verbose_name_plural='Channels Messages'
         ordering = ['-created_at']
-
-    @property
-    def media(self):
-        return self.image or self.file
-
-    @property
-    def name(self):
-        if self.media:
-            return self.media.name
-        return None
 
     def __str__(self):
         return f"Message from {self.sender.username} in {self.channel.name}"

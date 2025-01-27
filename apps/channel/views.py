@@ -1,12 +1,14 @@
 from django.db.models import Q
-from rest_framework.generics import ListCreateAPIView, UpdateAPIView, DestroyAPIView
+from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.generics import ListCreateAPIView, UpdateAPIView, DestroyAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from channel.models import Channel, ChannelMembership
-from channel.permissions import IsChannelOwner, IsChannelPrivate, IsChannelOwnerAndLeftMember
-from channel.serializers import ChannelSerializer, ChannelMembershipSerializer
+from channel.models import Channel, ChannelMembership, ChannelMessage
+from channel.permissions import IsChannelOwner, IsChannelPrivate, IsChannelOwnerAndLeftMember, ChannelMessageOwner
+from channel.serializers import ChannelSerializer, ChannelMembershipSerializer, ChannelMessageSerializer
+from share.tasks import send_push_notification
 from user.paginations import CustomPagination
 
 
@@ -64,3 +66,31 @@ class ChannelMembershipUpdateDestroyApiView(UpdateAPIView,DestroyAPIView):
             return member
         return super().get_object()
 
+class ChannelMessageCreateListApiView(ListCreateAPIView):
+    queryset = ChannelMessage.objects.all()
+    serializer_class = ChannelMessageSerializer
+    pagination_class = CustomPagination
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.method=='GET':
+            channel_id = self.kwargs.get('channel_id')
+            return self.queryset.filter(channel__id=channel_id)
+        return super().get_queryset()
+
+    def perform_create(self, serializer):
+        channel_id = self.kwargs.get('channel_id')
+        channel=Channel.objects.filter(pk=channel_id).first()
+        if not channel:
+            raise NotFound(detail="Channel Not Found")
+        user = self.request.user
+        if channel.owner != user:
+            raise PermissionDenied(detail="Sizga ushbu kanalda xabar yaratishga ruxsat berilmagan.")
+        message=serializer.save(channel=channel,sender=user)
+        for membership in channel.memberships.all():
+                send_push_notification.delay(str(membership.user.id),f"New Message in {channel.name}",message.text)
+
+class ChannelMessageRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
+    queryset = ChannelMessage.objects.all()
+    serializer_class = ChannelMessageSerializer
+    permission_classes = [IsAuthenticated,ChannelMessageOwner]

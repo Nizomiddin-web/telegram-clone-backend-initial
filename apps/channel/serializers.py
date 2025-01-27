@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from channel.models import Channel, ChannelMembership
+from channel.models import Channel, ChannelMembership, ChannelMessage
 from chat.serializers import UserSerializer
 User = get_user_model()
 
@@ -28,3 +28,11 @@ class ChannelMembershipSerializer(serializers.ModelSerializer):
             raise ValidationError("user not found")
         validated_data['user'] = user
         return super().create(validated_data)
+
+class ChannelMessageSerializer(serializers.ModelSerializer):
+    channel = ChannelSerializer(read_only=True)
+    user = UserSerializer(read_only=True,source="sender")
+    class Meta:
+        model = ChannelMessage
+        fields = ['id','channel','user','text','media','file','likes','created_at']
+

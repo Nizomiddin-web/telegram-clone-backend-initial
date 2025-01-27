@@ -63,7 +63,6 @@ class TestChannelMessageListCreateView:
 
         data = {"text": "Hello, this is a new message"}
         response = client.post(f"/api/channels/{channel.id}/messages/", data=data)
-
         assert response.status_code == status.HTTP_201_CREATED
         assert (
             response.data["text"] == "Hello, this is a new message"
