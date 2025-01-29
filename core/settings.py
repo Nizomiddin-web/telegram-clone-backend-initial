@@ -1,6 +1,5 @@
 import os
 import sys
-from email.policy import default
 
 import firebase_admin
 from datetime import timedelta
