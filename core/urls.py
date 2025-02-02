@@ -28,6 +28,7 @@ urlpatterns = [
             path('chats/',include('chat.urls')),
             path('groups/',include('group.urls')),
             path('channels/',include('channel.urls')),
+            path('',include('share.urls')),
 
             #Swagger path
             #---------------------------------------------------------------------
