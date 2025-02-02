@@ -364,7 +364,7 @@ ELASTICSEARCH_HOST = config("ELASTICSEARCH_HOST",default="localhost")
 ELASTICSEARCH_PORT = config("ELASTICSEARCH_PORT",default=9200)
 ELASTICSEARCH_DSL = {
     "default": {
-        "hosts":f"http://{ELASTICSEARCH_HOST}:{ELASTICSEARCH_PORT}"
+        "hosts":f"http://elasticsearch:{ELASTICSEARCH_PORT}"
     }
 }
 ENABLE_ES = config("ENABLE_ES",default=False,cast=bool)
