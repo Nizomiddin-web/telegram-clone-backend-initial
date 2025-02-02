@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from .documents import UserIndex,GroupIndex,ChannelIndex
 
 class SearchView(generics.GenericAPIView):
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self,request,*args,**kwargs):
         query = kwargs.get("query")
